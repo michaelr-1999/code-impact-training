@@ -1,7 +1,10 @@
 import express, { Request, Response } from "express";
 import { HealthResponse } from "./types";
+import tasksRouter from "./routes/tasks";
 
 const app = express();
+
+app.use("/api/v1/tasks", tasksRouter);
 
 app.get("/health", (_req: Request, res: Response<HealthResponse>) => {
   res.status(200).json({ status: "ok" });
