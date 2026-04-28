@@ -1,8 +1,5 @@
 import express, { Request, Response } from "express";
-
-interface HealthResponse {
-  status: "ok";
-}
+import { HealthResponse } from "./types";
 
 const app = express();
 
