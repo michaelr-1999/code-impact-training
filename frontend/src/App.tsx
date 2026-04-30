@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Task } from "./types";
+import type { Task } from "./types";
 import TaskCard from "./TaskCard";
 
 const initialTasks: Task[] = [
