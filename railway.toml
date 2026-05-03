@@ -6,4 +6,4 @@ dockerfilePath = "backend/Dockerfile"
 [deploy]
 healthcheckPath = "/health"
 healthcheckTimeout = 300
-startCommand = "npx prisma migrate deploy && node dist/server.js"
+startCommand = "npx prisma migrate deploy && node dist/index.js"
