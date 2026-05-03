@@ -3,7 +3,6 @@ import { HealthResponse } from "./types";
 import tasksRouter from "./routes/tasks";
 
 const app = express();
-console.log("app started");
 
 app.use("/api/v1/tasks", tasksRouter);
 
