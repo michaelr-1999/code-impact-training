@@ -17,3 +17,10 @@ jobs:
       - name: Build frontend
         run: npm ci && npm run build
         working-directory: frontend
+      - name: Deploy to Railway
+        run: |
+          npm install -g @railway/cli
+          railway redeploy --service backend --yes
+          railway redeploy --service frontend --yes
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
