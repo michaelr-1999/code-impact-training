@@ -20,7 +20,7 @@ jobs:
       - name: Deploy to Railway
         run: |
           npm install -g @railway/cli
-          railway redeploy --service backend --yes
-          railway redeploy --service frontend --yes
+          railway redeploy --service code-impact-training/backend --yes
+          railway redeploy --service code-impact-training/frontend --yes
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
