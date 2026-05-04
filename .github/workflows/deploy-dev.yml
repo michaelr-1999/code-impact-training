@@ -1,26 +1,20 @@
-name: Deploy Dev
+name: Deploy to Dev
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Triggered manually from GitHub → Actions
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - name: Build backend
-        run: npm ci && npm run build
-        working-directory: backend
-      - name: Build frontend
-        run: npm ci && npm run build
-        working-directory: frontend
-      - name: Deploy to Railway
-        run: |
-          npm install -g @railway/cli
-          railway redeploy --service code-impact-training/backend --yes
-          railway redeploy --service code-impact-training/frontend --yes
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+      - name: Deploy backend to Development
+        run: railway up --environment development --service code-impact-training/backend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Deploy frontend to Development
+        run: railway up --environment development --service code-impact-training/frontend
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
