@@ -11,10 +11,10 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
       - name: Deploy backend to Development
-        run: railway up --environment development --service code-impact-training/backend
+        run: railway up --environment Development --service code-impact-training/backend
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       - name: Deploy frontend to Development
-        run: railway up --environment development --service code-impact-training/frontend
+        run: railway up --environment Development --service code-impact-training/frontend
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
