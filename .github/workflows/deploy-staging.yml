@@ -1,0 +1,21 @@
+# .github/workflows/deploy-staging.yml
+name: Deploy to Staging
+
+on:
+  workflow_dispatch: # Triggered manually from GitHub → Actions
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+      - name: Deploy backend to Staging
+        run: railway up --environment staging --service code-impact-training/backend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Deploy frontend to staging
+        run: railway up --environment staging --service code-impact-training/frontend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
