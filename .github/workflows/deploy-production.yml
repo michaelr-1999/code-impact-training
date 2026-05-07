@@ -1,7 +1,8 @@
+# .github/workflows/deploy-production.yml
 name: Deploy to Production
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Triggered manually from GitHub → Actions
 
 jobs:
   deploy:
@@ -13,8 +14,8 @@ jobs:
       - name: Deploy backend to Production
         run: railway up --environment production --service code-impact-training/backend
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
       - name: Deploy frontend to Production
         run: railway up --environment production --service code-impact-training/frontend
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
