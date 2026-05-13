@@ -1,27 +1,23 @@
-import { useState } from "react";
-import type { Task } from "./types";
-import TaskCard from "./TaskCard";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import DashboardPage from "./pages/DashboardPage";
 
-const initialTasks: Task[] = [
-  { id: "1", title: "Set up the project", completed: true },
-  { id: "2", title: "Build the TaskCard component", completed: true },
-  { id: "3", title: "Connect to the backend", completed: false },
-];
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = !!localStorage.getItem("token");
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <>{children}</>;
+}
 
 function App() {
-  const [tasks] = useState<Task[]>(initialTasks);
-
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Impact Training</h1>
-        <div className="mt-6 flex flex-col gap-3 text-left">
-          {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} />
-          ))}
-        </div>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+        <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

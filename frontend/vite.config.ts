@@ -6,5 +6,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     allowedHosts: ['code-impact-trainingfrontend-development.up.railway.app'],
+    proxy: {
+      '/api': 'http://localhost:3000',
+    },
   },
 })
