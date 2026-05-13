@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { registerUser, loginUser } from "../services/authService";
+import { AppError } from "../lib/errors";
 
 export function getMeController(req: Request, res: Response) {
   res.status(200).json({ success: true, data: req.user });
@@ -22,9 +23,10 @@ export async function loginController(req: Request, res: Response) {
   try {
     const result = await loginUser(email, password);
     res.status(200).json({ success: true, data: result });
-  } catch (err: any) {
-    const status = err.statusCode ?? 500;
-    res.status(status).json({ success: false, error: err.message });
+  } catch (err) {
+    const status = err instanceof AppError ? err.statusCode : 500;
+    const message = err instanceof Error ? err.message : "Internal server error";
+    res.status(status).json({ success: false, error: message });
   }
 }
 
@@ -39,8 +41,9 @@ export async function registerController(req: Request, res: Response) {
   try {
     const result = await registerUser(name, email, password);
     res.status(201).json({ success: true, data: result });
-  } catch (err: any) {
-    const status = err.statusCode ?? 500;
-    res.status(status).json({ success: false, error: err.message });
+  } catch (err) {
+    const status = err instanceof AppError ? err.statusCode : 500;
+    const message = err instanceof Error ? err.message : "Internal server error";
+    res.status(status).json({ success: false, error: message });
   }
 }

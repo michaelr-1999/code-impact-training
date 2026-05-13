@@ -11,11 +11,13 @@ async function main() {
     });
   }
 
+  // eslint-disable-next-line no-console
   console.log("Seeded system reminder categories:", systemCategories.join(", "));
 }
 
 main()
   .catch((e) => {
+    // eslint-disable-next-line no-console
     console.error(e);
     process.exit(1);
   })

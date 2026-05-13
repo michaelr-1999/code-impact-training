@@ -2,11 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
 
-declare global {
-  namespace Express {
-    interface Request {
-      user: { id: string; name: string; email: string };
-    }
+declare module "express-serve-static-core" {
+  interface Request {
+    user: { id: string; name: string; email: string };
   }
 }
 

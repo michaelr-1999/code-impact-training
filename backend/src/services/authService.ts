@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
+import { AppError } from "../lib/errors";
 
 const SALT_ROUNDS = 10;
 
@@ -13,9 +14,7 @@ function getJwtSecret(): string {
 export async function registerUser(name: string, email: string, password: string) {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    const err = new Error("Email already in use");
-    (err as any).statusCode = 409;
-    throw err;
+    throw new AppError("Email already in use", 409);
   }
 
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
@@ -35,9 +34,7 @@ export async function loginUser(email: string, password: string) {
   const validPassword = user ? await bcrypt.compare(password, user.password) : false;
 
   if (!user || !validPassword) {
-    const err = new Error("Invalid email or password");
-    (err as any).statusCode = 401;
-    throw err;
+    throw new AppError("Invalid email or password", 401);
   }
 
   const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "7d" });
