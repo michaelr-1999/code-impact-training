@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
@@ -12,7 +13,11 @@ import AppLayout from "./layouts/AppLayout";
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth();
-  return token ? <Navigate to="/dashboard" replace /> : <>{children}</>;
+  // Only redirect if the user was already authenticated when this component mounted.
+  // If token becomes truthy during this render (i.e. they just logged in), let
+  // LoginPage's navigate() handle the destination instead of hardcoding /dashboard.
+  const [wasAuthOnMount] = useState(() => !!token);
+  return wasAuthOnMount && token ? <Navigate to="/dashboard" replace /> : <>{children}</>;
 }
 
 function App() {
