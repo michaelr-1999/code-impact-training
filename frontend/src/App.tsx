@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import PrivateRoute from "./components/PrivateRoute";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -9,25 +11,27 @@ import ProfilePage from "./pages/ProfilePage";
 import AppLayout from "./layouts/AppLayout";
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const isAuthenticated = !!localStorage.getItem("token");
-  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <>{children}</>;
+  const { token } = useAuth();
+  return token ? <Navigate to="/dashboard" replace /> : <>{children}</>;
 }
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-        <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-        <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/calendar" element={<CalendarPage />} />
-          <Route path="/tasks" element={<TasksPage />} />
-          <Route path="/reminders" element={<RemindersPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+          <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+          <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/tasks" element={<TasksPage />} />
+            <Route path="/reminders" element={<RemindersPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

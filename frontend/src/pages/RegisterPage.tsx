@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { register } from "../api/auth";
+import { useAuth } from "../context/AuthContext";
 import AuthLayout from "./AuthLayout";
 
 type FieldErrors = {
@@ -12,6 +13,7 @@ type FieldErrors = {
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { login: authLogin } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,9 +49,9 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const { token } = await register(name, email, password);
-      localStorage.setItem("token", token);
-      navigate("/dashboard");
+      const { token, user } = await register(name, email, password);
+      authLogin(token, user);
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Registration failed");
     } finally {

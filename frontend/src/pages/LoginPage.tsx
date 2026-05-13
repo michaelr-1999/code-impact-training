@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { login } from "../api/auth";
+import { useAuth } from "../context/AuthContext";
 import AuthLayout from "./AuthLayout";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { login: authLogin } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
@@ -32,9 +35,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const { token } = await login(email, password);
-      localStorage.setItem("token", token);
-      navigate("/dashboard");
+      const { token, user } = await login(email, password);
+      authLogin(token, user);
+      const redirect = searchParams.get("redirect");
+      navigate(redirect ?? "/dashboard", { replace: true });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Login failed");
     } finally {
