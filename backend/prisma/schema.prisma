@@ -6,25 +6,59 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Status {
-  TODO
-  IN_PROGRESS
-  DONE
-}
-
 model User {
   id        String   @id @default(uuid())
   name      String
   email     String   @unique
+  password  String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   tasks     Task[]
+  events    Event[]
+  reminders Reminder[]
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Reminder {
+  id            String            @id @default(uuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  scheduledTime DateTime?
+  isDone        Boolean           @default(false)
+  categoryId    String?
+  category      ReminderCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model ReminderCategory {
+  id        String     @id @default(uuid())
+  userId    String?
+  name      String
+  createdAt DateTime   @default(now())
+  reminders Reminder[]
 }
 
 model Task {
-  id        String    @id @default(uuid())
-  title     String
-  completed Boolean   @default(false)
-  dueDate   DateTime?
-  userId    String
-  user      User      @relation(fields: [userId], references: [id])
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
