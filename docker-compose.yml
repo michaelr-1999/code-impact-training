@@ -3,6 +3,7 @@ services:
     build: ./backend
     environment:
       DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
       PORT: 3000
     ports:
       - "3000:3000"
@@ -10,6 +11,9 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "5173:5173"
+      - "80:80"
+    environment:
+      PORT: 80
+      BACKEND_URL: http://backend:3000
     depends_on:
       - backend
