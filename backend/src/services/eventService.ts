@@ -1,8 +1,11 @@
 import prisma from "../lib/prisma";
 
-export async function getEvents(userId: string) {
+export async function getEvents(userId: string, start?: Date, end?: Date) {
   return prisma.event.findMany({
-    where: { userId },
+    where: {
+      userId,
+      ...(start && end ? { startTime: { gte: start, lte: end } } : {}),
+    },
     orderBy: { startTime: "asc" },
   });
 }
