@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     allowedHosts: ['code-impact-trainingfrontend-development.up.railway.app'],
     proxy: {
-      '/api': 'http://localhost:3000',
+      '/api': 'https://code-impact-trainingbackend-development.up.railway.app',
     },
   },
 })
