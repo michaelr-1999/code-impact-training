@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 
 app.use("/api/auth", authRouter);
-app.use("/api/v1/tasks", tasksRouter);
+app.use("/api/tasks", tasksRouter);
 app.use("/api/events", eventsRouter);
 app.use("/api/reminders", remindersRouter);
 app.use("/api/calendar", calendarRouter);
