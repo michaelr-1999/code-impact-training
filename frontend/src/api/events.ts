@@ -8,8 +8,8 @@ export interface ApiEvent {
   endTime: string;
 }
 
-export async function getEvents(): Promise<ApiEvent[]> {
-  const res = await apiFetch("/api/events");
+export async function getEvents(start: string, end: string): Promise<ApiEvent[]> {
+  const res = await apiFetch(`/api/events?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`);
   const json = await res.json();
   if (!res.ok) throw new Error(json.error ?? "Failed to load events");
   return json.data as ApiEvent[];

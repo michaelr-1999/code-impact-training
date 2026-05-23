@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef, type FormEvent } from "react";
-import { getEvents, createEvent, updateEvent, deleteEvent, type ApiEvent } from "../api/events";
+import { useNavigate } from "react-router-dom";
+import { createEvent, updateEvent, deleteEvent, type ApiEvent } from "../api/events";
+import type { ApiTask } from "../api/tasks";
+import type { ApiReminder } from "../api/reminders";
+import { getCalendarData } from "../api/calendar";
+import { calendarColors } from "../lib/calendarColors";
 
 const DAYS_OF_WEEK_SHORT = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const DAYS_OF_WEEK_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -327,7 +332,7 @@ function EventDetailModal({ event, onClose, onSave, onDelete }: {
 
 // ── Month view ────────────────────────────────────────────────────────────────
 
-function MonthView({ viewDate, today, events, onDayClick, onEventClick }: { viewDate: Date; today: Date; events: CalendarEvent[]; onDayClick: (date: Date) => void; onEventClick: (event: CalendarEvent) => void }) {
+function MonthView({ viewDate, today, events, tasks, reminders, onDayClick, onEventClick, onTaskClick, onReminderClick }: { viewDate: Date; today: Date; events: CalendarEvent[]; tasks: ApiTask[]; reminders: ApiReminder[]; onDayClick: (date: Date) => void; onEventClick: (event: CalendarEvent) => void; onTaskClick: () => void; onReminderClick: () => void }) {
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
 
@@ -364,6 +369,13 @@ function MonthView({ viewDate, today, events, onDayClick, onEventClick }: { view
           const cellEvents = cell.currentMonth
             ? events.filter((e) => isSameDay(new Date(e.startTime), cellDate))
             : [];
+          const cellTasks = cell.currentMonth
+            ? tasks.filter((t) => t.dueDate && isSameDay(new Date(t.dueDate), cellDate))
+            : [];
+          const cellReminders = cell.currentMonth
+            ? reminders.filter((r) => r.scheduledTime && isSameDay(new Date(r.scheduledTime), cellDate))
+            : [];
+          const totalItems = cellEvents.length + cellTasks.length + cellReminders.length;
           return (
             <div
               key={i}
@@ -389,13 +401,31 @@ function MonthView({ viewDate, today, events, onDayClick, onEventClick }: { view
                   <div
                     key={e.id}
                     onClick={(ev) => { ev.stopPropagation(); onEventClick(e); }}
-                    className="truncate text-xs px-1 py-0.5 bg-blue-100 text-blue-800 rounded cursor-pointer hover:bg-blue-200"
+                    className={`truncate text-xs px-1 py-0.5 rounded cursor-pointer ${calendarColors.event.pill}`}
                   >
                     {e.title}
                   </div>
                 ))}
-                {cellEvents.length > 2 && (
-                  <div className="text-xs text-gray-500 px-1">+{cellEvents.length - 2} more</div>
+                {cellTasks.slice(0, Math.max(0, 2 - cellEvents.length)).map((t) => (
+                  <div
+                    key={t.id}
+                    onClick={(ev) => { ev.stopPropagation(); onTaskClick(); }}
+                    className={`truncate text-xs px-1 py-0.5 rounded cursor-pointer ${calendarColors.task.pill}`}
+                  >
+                    {t.title}
+                  </div>
+                ))}
+                {cellReminders.slice(0, Math.max(0, 2 - cellEvents.length - cellTasks.length)).map((r) => (
+                  <div
+                    key={r.id}
+                    onClick={(ev) => { ev.stopPropagation(); onReminderClick(); }}
+                    className={`truncate text-xs px-1 py-0.5 rounded cursor-pointer ${calendarColors.reminder.pill}`}
+                  >
+                    {r.title}
+                  </div>
+                ))}
+                {totalItems > 2 && (
+                  <div className="text-xs text-gray-500 px-1">+{totalItems - 2} more</div>
                 )}
               </div>
             </div>
@@ -425,7 +455,7 @@ function minuteOffset() {
 
 // ── Week view ─────────────────────────────────────────────────────────────────
 
-function WeekView({ viewDate, today, events, onEventClick }: { viewDate: Date; today: Date; events: CalendarEvent[]; onEventClick: (event: CalendarEvent) => void }) {
+function WeekView({ viewDate, today, events, tasks, reminders, onEventClick, onTaskClick, onReminderClick }: { viewDate: Date; today: Date; events: CalendarEvent[]; tasks: ApiTask[]; reminders: ApiReminder[]; onEventClick: (event: CalendarEvent) => void; onTaskClick: () => void; onReminderClick: () => void }) {
   const weekStart = startOfWeek(viewDate);
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(weekStart);
@@ -494,7 +524,7 @@ function WeekView({ viewDate, today, events, onEventClick }: { viewDate: Date; t
               <div
                 key={event.id}
                 onClick={() => onEventClick(event)}
-                className="absolute bg-blue-500 text-white text-xs rounded px-1 py-0.5 overflow-hidden cursor-pointer hover:bg-blue-600"
+                className={`absolute text-xs rounded px-1 py-0.5 overflow-hidden cursor-pointer ${calendarColors.event.block}`}
                 style={{
                   top: `${top}px`,
                   height: `${height}px`,
@@ -506,6 +536,48 @@ function WeekView({ viewDate, today, events, onEventClick }: { viewDate: Date; t
               </div>
             );
           })}
+          {tasks.filter((t) => t.dueDate).map((task) => {
+            const due = new Date(task.dueDate!);
+            const dayIndex = days.findIndex((d) => isSameDay(d, due));
+            if (dayIndex === -1) return null;
+            const top = (due.getHours() + due.getMinutes() / 60) * CELL_HEIGHT;
+            return (
+              <div
+                key={task.id}
+                onClick={onTaskClick}
+                className={`absolute text-xs rounded px-1 py-0.5 overflow-hidden cursor-pointer ${calendarColors.task.block}`}
+                style={{
+                  top: `${top}px`,
+                  height: `${CELL_HEIGHT / 2}px`,
+                  left: `calc(56px + ${dayIndex} * (100% - 56px) / 7 + 2px)`,
+                  width: `calc((100% - 56px) / 7 - 4px)`,
+                }}
+              >
+                {task.title}
+              </div>
+            );
+          })}
+          {reminders.filter((r) => r.scheduledTime).map((reminder) => {
+            const scheduled = new Date(reminder.scheduledTime!);
+            const dayIndex = days.findIndex((d) => isSameDay(d, scheduled));
+            if (dayIndex === -1) return null;
+            const top = (scheduled.getHours() + scheduled.getMinutes() / 60) * CELL_HEIGHT;
+            return (
+              <div
+                key={reminder.id}
+                onClick={onReminderClick}
+                className={`absolute text-xs rounded px-1 py-0.5 overflow-hidden cursor-pointer ${calendarColors.reminder.block}`}
+                style={{
+                  top: `${top}px`,
+                  height: `${CELL_HEIGHT / 2}px`,
+                  left: `calc(56px + ${dayIndex} * (100% - 56px) / 7 + 2px)`,
+                  width: `calc((100% - 56px) / 7 - 4px)`,
+                }}
+              >
+                {reminder.title}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -514,7 +586,7 @@ function WeekView({ viewDate, today, events, onEventClick }: { viewDate: Date; t
 
 // ── Day view ──────────────────────────────────────────────────────────────────
 
-function DayView({ viewDate, today, events, onEventClick }: { viewDate: Date; today: Date; events: CalendarEvent[]; onEventClick: (event: CalendarEvent) => void }) {
+function DayView({ viewDate, today, events, tasks, reminders, onEventClick, onTaskClick, onReminderClick }: { viewDate: Date; today: Date; events: CalendarEvent[]; tasks: ApiTask[]; reminders: ApiReminder[]; onEventClick: (event: CalendarEvent) => void; onTaskClick: () => void; onReminderClick: () => void }) {
   const isToday = isSameDay(viewDate, today);
   const now = useCurrentTime();
   const currentHour = now.getHours();
@@ -580,10 +652,38 @@ function DayView({ viewDate, today, events, onEventClick }: { viewDate: Date; to
               <div
                 key={event.id}
                 onClick={() => onEventClick(event)}
-                className="absolute bg-blue-500 text-white text-xs rounded px-2 py-0.5 overflow-hidden cursor-pointer hover:bg-blue-600"
+                className={`absolute text-xs rounded px-2 py-0.5 overflow-hidden cursor-pointer ${calendarColors.event.block}`}
                 style={{ top: `${top}px`, height: `${height}px`, left: "56px", right: "4px" }}
               >
                 {event.title}
+              </div>
+            );
+          })}
+          {tasks.filter((t) => t.dueDate && isSameDay(new Date(t.dueDate), viewDate)).map((task) => {
+            const due = new Date(task.dueDate!);
+            const top = (due.getHours() + due.getMinutes() / 60) * CELL_HEIGHT;
+            return (
+              <div
+                key={task.id}
+                onClick={onTaskClick}
+                className={`absolute text-xs rounded px-2 py-0.5 overflow-hidden cursor-pointer ${calendarColors.task.block}`}
+                style={{ top: `${top}px`, height: `${CELL_HEIGHT / 2}px`, left: "56px", right: "4px" }}
+              >
+                {task.title}
+              </div>
+            );
+          })}
+          {reminders.filter((r) => r.scheduledTime && isSameDay(new Date(r.scheduledTime), viewDate)).map((reminder) => {
+            const scheduled = new Date(reminder.scheduledTime!);
+            const top = (scheduled.getHours() + scheduled.getMinutes() / 60) * CELL_HEIGHT;
+            return (
+              <div
+                key={reminder.id}
+                onClick={onReminderClick}
+                className={`absolute text-xs rounded px-2 py-0.5 overflow-hidden cursor-pointer ${calendarColors.reminder.block}`}
+                style={{ top: `${top}px`, height: `${CELL_HEIGHT / 2}px`, left: "56px", right: "4px" }}
+              >
+                {reminder.title}
               </div>
             );
           })}
@@ -611,7 +711,7 @@ function headerLabel(view: View, viewDate: Date) {
   return `${MONTH_NAMES[month]} ${viewDate.getDate()}, ${year}`;
 }
 
-function navigate(view: View, viewDate: Date, dir: 1 | -1): Date {
+function navDate(view: View, viewDate: Date, dir: 1 | -1): Date {
   const d = new Date(viewDate);
   if (view === "month") return new Date(d.getFullYear(), d.getMonth() + dir, 1);
   if (view === "week") { d.setDate(d.getDate() + dir * 7); return d; }
@@ -619,19 +719,54 @@ function navigate(view: View, viewDate: Date, dir: 1 | -1): Date {
   return d;
 }
 
+function getVisibleRange(view: View, viewDate: Date): { start: Date; end: Date } {
+  if (view === "day") {
+    const start = new Date(viewDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(viewDate);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }
+  if (view === "week") {
+    const start = startOfWeek(viewDate);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }
+  // month: full 6-week grid shown
+  const firstDayOfMonth = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1).getDay();
+  const start = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1 - firstDayOfMonth);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 41);
+  end.setHours(23, 59, 59, 999);
+  return { start, end };
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function CalendarPage() {
   const today = new Date();
+  const navigate = useNavigate();
   const [view, setView] = useState<View>("month");
   const [viewDate, setViewDate] = useState(today);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [tasks, setTasks] = useState<ApiTask[]>([]);
+  const [reminders, setReminders] = useState<ApiReminder[]>([]);
 
   useEffect(() => {
-    getEvents().then(setEvents).catch(() => {});
-  }, []);
+    const { start, end } = getVisibleRange(view, viewDate);
+    getCalendarData(start.toISOString(), end.toISOString())
+      .then(({ events, tasks, reminders }) => {
+        setEvents(events);
+        setTasks(tasks);
+        setReminders(reminders);
+      })
+      .catch(() => {});
+  }, [view, viewDate]);
 
   async function handleSubmit(data: { title: string; description: string; start: string; end: string }) {
     const event = await createEvent(data);
@@ -688,7 +823,7 @@ export default function CalendarPage() {
         {/* Navigation header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
           <button
-            onClick={() => setViewDate(navigate(view, viewDate, -1))}
+            onClick={() => setViewDate(navDate(view, viewDate, -1))}
             className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors text-xl leading-none"
             aria-label="Previous"
           >
@@ -698,7 +833,7 @@ export default function CalendarPage() {
             {headerLabel(view, viewDate)}
           </span>
           <button
-            onClick={() => setViewDate(navigate(view, viewDate, 1))}
+            onClick={() => setViewDate(navDate(view, viewDate, 1))}
             className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors text-xl leading-none"
             aria-label="Next"
           >
@@ -706,9 +841,9 @@ export default function CalendarPage() {
           </button>
         </div>
 
-        {view === "month" && <MonthView viewDate={viewDate} today={today} events={events} onDayClick={(date) => { setViewDate(date); setView("day"); }} onEventClick={setSelectedEvent} />}
-        {view === "week" && <WeekView viewDate={viewDate} today={today} events={events} onEventClick={setSelectedEvent} />}
-        {view === "day" && <DayView viewDate={viewDate} today={today} events={events} onEventClick={setSelectedEvent} />}
+        {view === "month" && <MonthView viewDate={viewDate} today={today} events={events} tasks={tasks} reminders={reminders} onDayClick={(date) => { setViewDate(date); setView("day"); }} onEventClick={setSelectedEvent} onTaskClick={() => navigate("/tasks")} onReminderClick={() => navigate("/reminders")} />}
+        {view === "week" && <WeekView viewDate={viewDate} today={today} events={events} tasks={tasks} reminders={reminders} onEventClick={setSelectedEvent} onTaskClick={() => navigate("/tasks")} onReminderClick={() => navigate("/reminders")} />}
+        {view === "day" && <DayView viewDate={viewDate} today={today} events={events} tasks={tasks} reminders={reminders} onEventClick={setSelectedEvent} onTaskClick={() => navigate("/tasks")} onReminderClick={() => navigate("/reminders")} />}
       </div>
 
       {showCreateModal && (

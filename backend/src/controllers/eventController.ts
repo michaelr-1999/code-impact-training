@@ -3,8 +3,10 @@ import { createEvent, updateEvent, deleteEvent, getEvents } from "../services/ev
 import { AppError } from "../lib/errors";
 
 export async function getEventsController(req: Request, res: Response) {
+  const start = req.query.start ? new Date(req.query.start as string) : undefined;
+  const end = req.query.end ? new Date(req.query.end as string) : undefined;
   try {
-    const events = await getEvents(req.user.id);
+    const events = await getEvents(req.user.id, start, end);
     res.status(200).json({ success: true, data: events });
   } catch (err) {
     const status = err instanceof AppError ? err.statusCode : 500;
