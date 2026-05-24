@@ -7,10 +7,11 @@ interface Props {
   tasks: ApiTask[];
   emptyMessage: string;
   onToggle: (task: ApiTask) => void;
+  onEdit: (task: ApiTask) => void;
   collapsible?: boolean;
 }
 
-export function TaskList({ title, tasks, emptyMessage, onToggle, collapsible = false }: Props) {
+export function TaskList({ title, tasks, emptyMessage, onToggle, onEdit, collapsible = false }: Props) {
   const [expanded, setExpanded] = useState(false);
   const visible = !collapsible || expanded;
 
@@ -35,7 +36,9 @@ export function TaskList({ title, tasks, emptyMessage, onToggle, collapsible = f
           <p className="text-sm text-gray-400 italic">{emptyMessage}</p>
         ) : (
           <div className="space-y-2">
-            {tasks.map(task => <TaskItem key={task.id} task={task} onToggle={onToggle} />)}
+            {tasks.map(task => (
+              <TaskItem key={task.id} task={task} onToggle={onToggle} onEdit={onEdit} />
+            ))}
           </div>
         )
       )}
