@@ -1,84 +1,113 @@
-import { useState, useEffect, type FormEvent } from "react";
-import { getAllReminders, createReminder, type ApiReminder } from "../api/reminders";
-
-function formatDate(iso: string | null) {
-  if (!iso) return "No scheduled time";
-  return new Date(iso).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
-}
+import { useState, useEffect } from "react";
+import {
+  getAllReminders,
+  getCategories,
+  markReminderDone,
+  markReminderUndone,
+  type ApiReminder,
+  type ApiReminderCategory,
+} from "../api/reminders";
+import { CategorySection } from "../components/reminders/CategorySection";
+import { ReminderItem } from "../components/reminders/ReminderItem";
+import { ReminderModal } from "../components/reminders/ReminderModal";
 
 export default function RemindersPage() {
   const [reminders, setReminders] = useState<ApiReminder[]>([]);
-  const [title, setTitle] = useState("");
-  const [scheduledTime, setScheduledTime] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [categories, setCategories] = useState<ApiReminderCategory[]>([]);
+  const [showCompleted, setShowCompleted] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    getAllReminders().then(setReminders).catch(() => {});
+    Promise.all([getAllReminders(), getCategories()])
+      .then(([r, c]) => {
+        setReminders(r);
+        setCategories(c);
+      })
+      .catch(() => {});
   }, []);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!title.trim()) return;
-    setSubmitting(true);
+  async function handleToggle(reminder: ApiReminder) {
+    const wasDone = reminder.isDone;
+    setReminders((prev) =>
+      prev.map((r) => (r.id === reminder.id ? { ...r, isDone: !wasDone } : r))
+    );
     try {
-      const reminder = await createReminder({
-        title: title.trim(),
-        scheduledTime: scheduledTime ? new Date(scheduledTime).toISOString() : undefined,
-      });
-      setReminders((prev) => [reminder, ...prev]);
-      setTitle("");
-      setScheduledTime("");
-    } finally {
-      setSubmitting(false);
+      const updated = wasDone
+        ? await markReminderUndone(reminder.id)
+        : await markReminderDone(reminder.id);
+      setReminders((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+    } catch {
+      setReminders((prev) =>
+        prev.map((r) => (r.id === reminder.id ? { ...r, isDone: wasDone } : r))
+      );
     }
   }
 
+  const active = reminders.filter((r) => !r.isDone);
+  const done = reminders.filter((r) => r.isDone);
+  const uncategorizedActive = active.filter((r) => r.categoryId === null);
+
   return (
     <div className="p-4 sm:p-8 max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Reminders</h1>
-
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 shadow p-4 mb-6 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700">New Reminder</h2>
-        <input
-          type="text"
-          placeholder="Reminder title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-        />
-        <div>
-          <label className="block text-xs text-gray-500 mb-1">Scheduled time (optional)</label>
-          <input
-            type="datetime-local"
-            value={scheduledTime}
-            onChange={(e) => setScheduledTime(e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-          />
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Reminders</h1>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setShowCompleted((v) => !v)}
+            className="text-sm text-amber-600 hover:text-amber-700 font-medium"
+          >
+            {showCompleted ? "Hide completed" : "Show completed"}
+          </button>
+          <button
+            onClick={() => setShowModal(true)}
+            className="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition-colors"
+          >
+            Create reminder
+          </button>
         </div>
-        <button
-          type="submit"
-          disabled={submitting || !title.trim()}
-          className="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 disabled:opacity-50 transition-colors"
-        >
-          {submitting ? "Adding…" : "Add Reminder"}
-        </button>
-      </form>
-
-      <div className="space-y-2">
-        {reminders.length === 0 && (
-          <p className="text-sm text-gray-500">No reminders yet.</p>
-        )}
-        {reminders.map((reminder) => (
-          <div key={reminder.id} className="flex items-start gap-3 bg-white border border-gray-200 rounded-lg px-4 py-3">
-            <div className="w-2 h-2 mt-1.5 rounded-full bg-amber-500 shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-gray-900">{reminder.title}</p>
-              <p className="text-xs text-gray-500">{formatDate(reminder.scheduledTime)}</p>
-            </div>
-          </div>
-        ))}
       </div>
+
+      {categories.map((cat) => (
+        <CategorySection
+          key={cat.id}
+          name={cat.name}
+          reminders={active.filter((r) => r.categoryId === cat.id)}
+          onToggle={handleToggle}
+        />
+      ))}
+
+      {uncategorizedActive.length > 0 && (
+        <CategorySection
+          name="Uncategorized"
+          reminders={uncategorizedActive}
+          onToggle={handleToggle}
+        />
+      )}
+
+      {showModal && (
+        <ReminderModal
+          categories={categories}
+          onClose={() => setShowModal(false)}
+          onSave={(reminder) => setReminders((prev) => [reminder, ...prev])}
+        />
+      )}
+
+      {showCompleted && (
+        <div className="mt-6">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+            Completed
+          </h2>
+          {done.length === 0 ? (
+            <p className="text-sm text-gray-400">No completed reminders.</p>
+          ) : (
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-4 py-2">
+              {done.map((r) => (
+                <ReminderItem key={r.id} reminder={r} onToggle={handleToggle} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
