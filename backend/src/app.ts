@@ -4,6 +4,7 @@ import tasksRouter from "./routes/tasks";
 import authRouter from "./routes/auth";
 import eventsRouter from "./routes/events";
 import remindersRouter from "./routes/reminders";
+import reminderCategoriesRouter from "./routes/reminderCategories";
 import calendarRouter from "./routes/calendar";
 
 const app = express();
@@ -14,6 +15,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/tasks", tasksRouter);
 app.use("/api/events", eventsRouter);
 app.use("/api/reminders", remindersRouter);
+app.use("/api/reminder-categories", reminderCategoriesRouter);
 app.use("/api/calendar", calendarRouter);
 
 app.get("/health", (_req: Request, res: Response<HealthResponse>) => {
