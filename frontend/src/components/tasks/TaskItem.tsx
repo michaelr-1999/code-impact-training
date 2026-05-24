@@ -7,9 +7,10 @@ function formatDate(iso: string) {
 interface Props {
   task: ApiTask;
   onToggle: (task: ApiTask) => void;
+  onEdit: (task: ApiTask) => void;
 }
 
-export function TaskItem({ task, onToggle }: Props) {
+export function TaskItem({ task, onToggle, onEdit }: Props) {
   const done = !!task.completedAt;
   const overdue = !done && !!task.dueDate && new Date(task.dueDate) < new Date();
   return (
@@ -20,10 +21,14 @@ export function TaskItem({ task, onToggle }: Props) {
         onChange={() => onToggle(task)}
         className="mt-0.5 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500 cursor-pointer"
       />
-      <div>
-        <p className={`text-sm font-medium ${done ? "line-through text-gray-400" : "text-gray-900"}`}>
+      <div className="min-w-0">
+        <button
+          type="button"
+          onClick={() => onEdit(task)}
+          className={`text-sm font-medium text-left hover:underline ${done ? "line-through text-gray-400" : "text-gray-900"}`}
+        >
           {task.title}
-        </p>
+        </button>
         {task.dueDate && (
           <p className={`text-xs ${overdue ? "text-red-500 font-medium" : "text-gray-500"}`}>
             {overdue ? "Overdue · " : ""}{formatDate(task.dueDate)}
