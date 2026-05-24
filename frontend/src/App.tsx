@@ -17,7 +17,11 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   // If token becomes truthy during this render (i.e. they just logged in), let
   // LoginPage's navigate() handle the destination instead of hardcoding /dashboard.
   const [wasAuthOnMount] = useState(() => !!token);
-  return wasAuthOnMount && token ? <Navigate to="/dashboard" replace /> : <>{children}</>;
+  return wasAuthOnMount && token ? (
+    <Navigate to="/dashboard" replace />
+  ) : (
+    <>{children}</>
+  );
 }
 
 function App() {
@@ -25,9 +29,29 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-          <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
-          <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <LoginPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <RegisterPage />
+              </PublicRoute>
+            }
+          />
+          <Route
+            element={
+              <PrivateRoute>
+                <AppLayout />
+              </PrivateRoute>
+            }
+          >
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/tasks" element={<TasksPage />} />

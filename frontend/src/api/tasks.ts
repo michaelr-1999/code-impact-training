@@ -6,6 +6,7 @@ export interface ApiTask {
   description: string | null;
   dueDate: string | null;
   completedAt: string | null;
+  createdAt: string;
 }
 
 export async function getTasks(start: string, end: string): Promise<ApiTask[]> {
@@ -15,8 +16,9 @@ export async function getTasks(start: string, end: string): Promise<ApiTask[]> {
   return json.data as ApiTask[];
 }
 
-export async function getAllTasks(): Promise<ApiTask[]> {
-  const res = await apiFetch("/api/tasks");
+export async function getAllTasks(includeDone = false): Promise<ApiTask[]> {
+  const params = includeDone ? "?includeDone=true" : "";
+  const res = await apiFetch(`/api/tasks${params}`);
   const json = await res.json();
   if (!res.ok) throw new Error(json.error ?? "Failed to load tasks");
   return json.data as ApiTask[];
