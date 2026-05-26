@@ -6,6 +6,7 @@ interface Props {
   name: string;
   reminders: ApiReminder[];
   onToggle: (reminder: ApiReminder) => void;
+  onEdit: (reminder: ApiReminder) => void;
 }
 
 function sortByScheduledTime(reminders: ApiReminder[]): ApiReminder[] {
@@ -17,7 +18,7 @@ function sortByScheduledTime(reminders: ApiReminder[]): ApiReminder[] {
   });
 }
 
-export function CategorySection({ name, reminders, onToggle }: Props) {
+export function CategorySection({ name, reminders, onToggle, onEdit }: Props) {
   const [expanded, setExpanded] = useState(true);
   const sorted = sortByScheduledTime(reminders);
 
@@ -44,7 +45,7 @@ export function CategorySection({ name, reminders, onToggle }: Props) {
             <p className="text-sm text-gray-400 py-2">No reminders</p>
           ) : (
             sorted.map((r) => (
-              <ReminderItem key={r.id} reminder={r} onToggle={onToggle} />
+              <ReminderItem key={r.id} reminder={r} onToggle={onToggle} onEdit={onEdit} />
             ))
           )}
         </div>

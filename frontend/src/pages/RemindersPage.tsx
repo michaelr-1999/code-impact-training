@@ -15,7 +15,8 @@ export default function RemindersPage() {
   const [reminders, setReminders] = useState<ApiReminder[]>([]);
   const [categories, setCategories] = useState<ApiReminderCategory[]>([]);
   const [showCompleted, setShowCompleted] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editReminder, setEditReminder] = useState<ApiReminder | null>(null);
 
   useEffect(() => {
     Promise.all([getAllReminders(), getCategories()])
@@ -25,6 +26,28 @@ export default function RemindersPage() {
       })
       .catch(() => {});
   }, []);
+
+  function openCreate() {
+    setEditReminder(null);
+    setModalOpen(true);
+  }
+
+  function openEdit(reminder: ApiReminder) {
+    setEditReminder(reminder);
+    setModalOpen(true);
+  }
+
+  function handleSave(reminder: ApiReminder) {
+    setReminders((prev) => {
+      const idx = prev.findIndex((r) => r.id === reminder.id);
+      if (idx >= 0) return prev.map((r) => (r.id === reminder.id ? reminder : r));
+      return [reminder, ...prev];
+    });
+  }
+
+  function handleDelete(id: string) {
+    setReminders((prev) => prev.filter((r) => r.id !== id));
+  }
 
   async function handleToggle(reminder: ApiReminder) {
     const wasDone = reminder.isDone;
@@ -59,7 +82,7 @@ export default function RemindersPage() {
             {showCompleted ? "Hide completed" : "Show completed"}
           </button>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={openCreate}
             className="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition-colors"
           >
             Create reminder
@@ -73,6 +96,7 @@ export default function RemindersPage() {
           name={cat.name}
           reminders={active.filter((r) => r.categoryId === cat.id)}
           onToggle={handleToggle}
+          onEdit={openEdit}
         />
       ))}
 
@@ -81,14 +105,7 @@ export default function RemindersPage() {
           name="Uncategorized"
           reminders={uncategorizedActive}
           onToggle={handleToggle}
-        />
-      )}
-
-      {showModal && (
-        <ReminderModal
-          categories={categories}
-          onClose={() => setShowModal(false)}
-          onSave={(reminder) => setReminders((prev) => [reminder, ...prev])}
+          onEdit={openEdit}
         />
       )}
 
@@ -102,11 +119,22 @@ export default function RemindersPage() {
           ) : (
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-4 py-2">
               {done.map((r) => (
-                <ReminderItem key={r.id} reminder={r} onToggle={handleToggle} />
+                <ReminderItem key={r.id} reminder={r} onToggle={handleToggle} onEdit={openEdit} />
               ))}
             </div>
           )}
         </div>
+      )}
+
+      {modalOpen && (
+        <ReminderModal
+          reminder={editReminder}
+          categories={categories}
+          onClose={() => setModalOpen(false)}
+          onSave={handleSave}
+          onDelete={handleDelete}
+          onCategoriesChange={setCategories}
+        />
       )}
     </div>
   );
