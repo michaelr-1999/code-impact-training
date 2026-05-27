@@ -6,6 +6,7 @@ import eventsRouter from "./routes/events";
 import remindersRouter from "./routes/reminders";
 import reminderCategoriesRouter from "./routes/reminderCategories";
 import calendarRouter from "./routes/calendar";
+import dashboardRouter from "./routes/dashboard";
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use("/api/events", eventsRouter);
 app.use("/api/reminders", remindersRouter);
 app.use("/api/reminder-categories", reminderCategoriesRouter);
 app.use("/api/calendar", calendarRouter);
+app.use("/api/dashboard", dashboardRouter);
 
 app.get("/health", (_req: Request, res: Response<HealthResponse>) => {
   res.status(200).json({ status: "ok" });
