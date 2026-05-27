@@ -14,6 +14,15 @@ export async function register(name: string, email: string, password: string) {
   return data.data as { token: string; user: { id: string; name: string; email: string } };
 }
 
+export async function getMe(token: string) {
+  const res = await fetch("/api/auth/me", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to fetch profile");
+  return data.data as { id: string; name: string; email: string };
+}
+
 export async function login(email: string, password: string) {
   const res = await fetch("/api/auth/login", {
     method: "POST",
