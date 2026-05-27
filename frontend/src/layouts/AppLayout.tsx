@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { NavLink, Outlet } from "react-router-dom";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard" },
@@ -11,16 +10,8 @@ const navItems = [
 ];
 
 function Sidebar({ onClose }: { onClose?: () => void }) {
-  const navigate = useNavigate();
-  const { logout } = useAuth();
-
   function handleNavClick() {
     onClose?.();
-  }
-
-  function handleLogout() {
-    logout();
-    navigate("/login", { replace: true });
   }
 
   return (
@@ -46,14 +37,6 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
           </NavLink>
         ))}
       </nav>
-      <div className="px-3 py-4 border-t border-gray-200 shrink-0">
-        <button
-          onClick={handleLogout}
-          className="w-full px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 text-left"
-        >
-          Sign out
-        </button>
-      </div>
     </div>
   );
 }

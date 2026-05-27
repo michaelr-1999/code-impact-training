@@ -8,7 +8,7 @@ type User = { id: string; name: string; email: string };
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function ProfilePage() {
-  const { user: ctxUser, token, updateUser } = useAuth();
+  const { user: ctxUser, token, updateUser, logout } = useAuth();
   const navigate = useNavigate();
 
   const [user, setUser] = useState<User | null>(ctxUser);
@@ -204,6 +204,18 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Sign out */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <h2 className="text-sm font-semibold text-gray-700 mb-1">Sign out</h2>
+        <p className="text-sm text-gray-500 mb-3">You will be redirected to the login page.</p>
+        <button
+          onClick={() => { logout(); navigate("/login", { replace: true }); }}
+          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
+        >
+          Sign out
+        </button>
       </div>
 
       {/* Change password card */}
