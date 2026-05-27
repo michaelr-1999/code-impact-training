@@ -7,6 +7,10 @@ if (!process.env.JWT_SECRET) {
   throw new Error("JWT_SECRET environment variable is required");
 }
 
+if (!process.env.ANTHROPIC_API_KEY) {
+  throw new Error("ANTHROPIC_API_KEY environment variable is required");
+}
+
 const PORT = process.env.PORT ?? 3000;
 
 app.listen(PORT, () => {

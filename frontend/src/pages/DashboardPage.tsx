@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { getDashboardToday, type DashboardData } from "../api/dashboard";
+import { getDashboardToday, postAiSummary, type DashboardData } from "../api/dashboard";
 import { EventsWidget } from "../components/dashboard/EventsWidget";
 import { TasksWidget } from "../components/dashboard/TasksWidget";
 import { RemindersWidget } from "../components/dashboard/RemindersWidget";
+import { AISummaryCard } from "../components/dashboard/AISummaryCard";
 
 function formatToday() {
   return new Date().toLocaleDateString("en-US", {
@@ -29,6 +30,9 @@ function WidgetSkeleton() {
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
 
   useEffect(() => {
     getDashboardToday()
@@ -36,6 +40,15 @@ export default function DashboardPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  function handleGenerateSummary() {
+    setSummaryLoading(true);
+    setSummaryError(null);
+    postAiSummary()
+      .then(setSummary)
+      .catch(() => setSummaryError("Couldn't generate summary — try again"))
+      .finally(() => setSummaryLoading(false));
+  }
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl">
@@ -51,11 +64,45 @@ export default function DashboardPage() {
           <WidgetSkeleton />
         </div>
       ) : data ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <EventsWidget events={data.events} />
-          <TasksWidget tasks={data.tasks} />
-          <RemindersWidget reminders={data.reminders} />
-        </div>
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <EventsWidget events={data.events} />
+            <TasksWidget tasks={data.tasks} />
+            <RemindersWidget reminders={data.reminders} />
+          </div>
+
+          <div className="mt-4">
+            <button
+              onClick={handleGenerateSummary}
+              disabled={summaryLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              {summaryLoading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  Generating…
+                </>
+              ) : summary ? (
+                "Refresh summary"
+              ) : (
+                "Your day ahead"
+              )}
+            </button>
+
+            {summaryError && (
+              <p className="mt-2 text-sm text-red-500">{summaryError}</p>
+            )}
+
+            {summary && !summaryLoading && (
+              <div className="mt-3">
+                <AISummaryCard summary={summary} />
+              </div>
+            )}
+          </div>
+        </>
       ) : (
         <p className="text-sm text-gray-400">Failed to load dashboard data.</p>
       )}
