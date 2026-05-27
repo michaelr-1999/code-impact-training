@@ -32,3 +32,10 @@ export async function getDashboardToday(): Promise<DashboardData> {
   if (!res.ok) throw new Error(json.error ?? "Failed to load dashboard");
   return json.data as DashboardData;
 }
+
+export async function postAiSummary(): Promise<string> {
+  const res = await apiFetch("/api/dashboard/ai-summary", { method: "POST" });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error ?? "Failed to generate summary");
+  return json.data.summary as string;
+}
