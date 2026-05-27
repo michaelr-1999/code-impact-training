@@ -16,12 +16,12 @@ function formatToday() {
 
 function WidgetSkeleton() {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 animate-pulse">
-      <div className="h-3.5 bg-gray-200 rounded w-1/3 mb-4" />
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 animate-pulse">
+      <div className="h-3.5 bg-gray-200 dark:bg-gray-800 rounded w-1/3 mb-4" />
       <div className="space-y-3">
-        <div className="h-3 bg-gray-200 rounded w-3/4" />
-        <div className="h-3 bg-gray-200 rounded w-2/3" />
-        <div className="h-3 bg-gray-200 rounded w-1/2" />
+        <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-3/4" />
+        <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-2/3" />
+        <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-1/2" />
       </div>
     </div>
   );
@@ -53,8 +53,8 @@ export default function DashboardPage() {
   return (
     <div className="p-4 sm:p-8 max-w-5xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-1">{formatToday()}</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{formatToday()}</p>
       </div>
 
       {loading ? (
@@ -75,7 +75,7 @@ export default function DashboardPage() {
             <button
               onClick={handleGenerateSummary}
               disabled={summaryLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:bg-moss dark:hover:bg-moss-hover dark:text-black dark:disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
             >
               {summaryLoading ? (
                 <>
@@ -104,7 +104,7 @@ export default function DashboardPage() {
           </div>
         </>
       ) : (
-        <p className="text-sm text-gray-400">Failed to load dashboard data.</p>
+        <p className="text-sm text-gray-400 dark:text-gray-500">Failed to load dashboard data.</p>
       )}
     </div>
   );

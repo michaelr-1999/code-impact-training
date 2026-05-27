@@ -24,11 +24,11 @@ export function ReminderItem({ reminder, onToggle, onEdit }: Props) {
       <button
         type="button"
         onClick={() => onEdit(reminder)}
-        className={`text-sm flex-1 text-left hover:underline ${reminder.isDone ? "line-through text-gray-400" : "text-gray-900"}`}
+        className={`text-sm flex-1 text-left hover:underline ${reminder.isDone ? "line-through text-gray-400 dark:text-gray-500" : "text-gray-900 dark:text-white"}`}
       >
         {reminder.title}
       </button>
-      {time && <span className="text-xs text-gray-400 shrink-0">{time}</span>}
+      {time && <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">{time}</span>}
     </div>
   );
 }

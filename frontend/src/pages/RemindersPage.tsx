@@ -73,11 +73,11 @@ export default function RemindersPage() {
   return (
     <div className="p-4 sm:p-8 max-w-2xl">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Reminders</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Reminders</h1>
         <div className="flex items-center gap-4">
           <button
             onClick={() => setShowCompleted((v) => !v)}
-            className="text-sm text-amber-600 hover:text-amber-700 font-medium"
+            className="text-sm text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400 font-medium"
           >
             {showCompleted ? "Hide completed" : "Show completed"}
           </button>
@@ -111,13 +111,13 @@ export default function RemindersPage() {
 
       {showCompleted && (
         <div className="mt-6">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Completed
           </h2>
           {done.length === 0 ? (
-            <p className="text-sm text-gray-400">No completed reminders.</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">No completed reminders.</p>
           ) : (
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-4 py-2">
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm px-4 py-2">
               {done.map((r) => (
                 <ReminderItem key={r.id} reminder={r} onToggle={handleToggle} onEdit={openEdit} />
               ))}
