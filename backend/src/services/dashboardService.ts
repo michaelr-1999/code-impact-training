@@ -20,9 +20,10 @@ export async function getDashboardToday(userId: string) {
     prisma.task.findMany({
       where: {
         userId,
+        completedAt: null,
         OR: [
           { dueDate: { gte: startOfDay, lte: endOfDay } },
-          { dueDate: { lt: startOfDay }, completedAt: null },
+          { dueDate: { lt: startOfDay } },
         ],
       },
       orderBy: { dueDate: "asc" },
