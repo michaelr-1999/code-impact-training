@@ -4,7 +4,9 @@ export async function getEvents(userId: string, start?: Date, end?: Date) {
   return prisma.event.findMany({
     where: {
       userId,
-      ...(start && end ? { startTime: { gte: start, lte: end } } : {}),
+      ...(start && end
+        ? { AND: [{ startTime: { lt: end } }, { endTime: { gt: start } }] }
+        : {}),
     },
     orderBy: { startTime: "asc" },
   });

@@ -510,31 +510,39 @@ function WeekView({ viewDate, today, events, tasks, reminders, onEventClick, onT
               ))}
             </div>
           ))}
-          {events.map((event) => {
-            const start = new Date(event.startTime);
-            const end = new Date(event.endTime);
-            const dayIndex = days.findIndex((d) => isSameDay(d, start));
-            if (dayIndex === -1) return null;
-            const top = (start.getHours() + start.getMinutes() / 60) * CELL_HEIGHT;
-            const height = Math.max(
-              ((end.getTime() - start.getTime()) / (1000 * 60 * 60)) * CELL_HEIGHT,
-              CELL_HEIGHT / 2
-            );
-            return (
-              <div
-                key={event.id}
-                onClick={() => onEventClick(event)}
-                className={`absolute text-xs rounded px-1 py-0.5 overflow-hidden cursor-pointer ${calendarColors.event.block}`}
-                style={{
-                  top: `${top}px`,
-                  height: `${height}px`,
-                  left: `calc(56px + ${dayIndex} * (100% - 56px) / 7 + 2px)`,
-                  width: `calc((100% - 56px) / 7 - 4px)`,
-                }}
-              >
-                {event.title}
-              </div>
-            );
+          {events.flatMap((event) => {
+            const eventStart = new Date(event.startTime);
+            const eventEnd = new Date(event.endTime);
+            return days.flatMap((day, dayIndex) => {
+              const dayStart = new Date(day);
+              dayStart.setHours(0, 0, 0, 0);
+              const dayEnd = new Date(dayStart);
+              dayEnd.setDate(dayStart.getDate() + 1);
+              if (eventEnd <= dayStart || eventStart >= dayEnd) return [];
+              const segStart = eventStart > dayStart ? eventStart : dayStart;
+              const segEnd = eventEnd < dayEnd ? eventEnd : dayEnd;
+              const dayMs = 86400000;
+              const top = ((segStart.getTime() - dayStart.getTime()) / dayMs) * 24 * CELL_HEIGHT;
+              const height = Math.max(
+                ((segEnd.getTime() - segStart.getTime()) / dayMs) * 24 * CELL_HEIGHT,
+                CELL_HEIGHT / 2
+              );
+              return [(
+                <div
+                  key={`${event.id}-${dayIndex}`}
+                  onClick={() => onEventClick(event)}
+                  className={`absolute text-xs rounded px-1 py-0.5 overflow-hidden cursor-pointer ${calendarColors.event.block}`}
+                  style={{
+                    top: `${top}px`,
+                    height: `${height}px`,
+                    left: `calc(56px + ${dayIndex} * (100% - 56px) / 7 + 2px)`,
+                    width: `calc((100% - 56px) / 7 - 4px)`,
+                  }}
+                >
+                  {event.title}
+                </div>
+              )];
+            });
           })}
           {tasks.filter((t) => t.dueDate).map((task) => {
             const due = new Date(task.dueDate!);
@@ -640,12 +648,19 @@ function DayView({ viewDate, today, events, tasks, reminders, onEventClick, onTa
               </div>
             );
           })}
-          {events.filter((e) => isSameDay(new Date(e.startTime), viewDate)).map((event) => {
-            const start = new Date(event.startTime);
-            const end = new Date(event.endTime);
-            const top = (start.getHours() + start.getMinutes() / 60) * CELL_HEIGHT;
+          {events.filter((e) => {
+            const dayStart = new Date(viewDate); dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(dayStart); dayEnd.setDate(dayStart.getDate() + 1);
+            return new Date(e.endTime) > dayStart && new Date(e.startTime) < dayEnd;
+          }).map((event) => {
+            const dayStart = new Date(viewDate); dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(dayStart); dayEnd.setDate(dayStart.getDate() + 1);
+            const segStart = new Date(event.startTime) > dayStart ? new Date(event.startTime) : dayStart;
+            const segEnd = new Date(event.endTime) < dayEnd ? new Date(event.endTime) : dayEnd;
+            const dayMs = 86400000;
+            const top = ((segStart.getTime() - dayStart.getTime()) / dayMs) * 24 * CELL_HEIGHT;
             const height = Math.max(
-              ((end.getTime() - start.getTime()) / (1000 * 60 * 60)) * CELL_HEIGHT,
+              ((segEnd.getTime() - segStart.getTime()) / dayMs) * 24 * CELL_HEIGHT,
               CELL_HEIGHT / 2
             );
             return (
