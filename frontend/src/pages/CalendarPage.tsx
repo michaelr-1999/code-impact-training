@@ -83,12 +83,12 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Create event</h2>
+      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Create event</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors text-xl leading-none"
+            className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors text-xl leading-none"
             aria-label="Close"
           >
             &#x2715;
@@ -96,7 +96,7 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
         </div>
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -104,40 +104,40 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Event title"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add a description (optional)"
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Start <span className="text-red-500">*</span>
               </label>
               <input
                 type="datetime-local"
                 value={start}
                 onChange={(e) => setStart(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 End <span className="text-red-500">*</span>
               </label>
               <input
                 type="datetime-local"
                 value={end}
                 onChange={(e) => setEnd(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
           </div>
@@ -146,7 +146,7 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
             >
               Cancel
             </button>
@@ -221,12 +221,12 @@ function EventDetailModal({ event, onClose, onSave, onDelete }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Edit event</h2>
+      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Edit event</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors text-xl leading-none"
+            className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors text-xl leading-none"
             aria-label="Close"
           >
             &#x2715;
@@ -234,46 +234,46 @@ function EventDetailModal({ event, onClose, onSave, onDelete }: {
         </div>
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Title <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Start <span className="text-red-500">*</span>
               </label>
               <input
                 type="datetime-local"
                 value={start}
                 onChange={(e) => setStart(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 End <span className="text-red-500">*</span>
               </label>
               <input
                 type="datetime-local"
                 value={end}
                 onChange={(e) => setEnd(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
           </div>
@@ -281,7 +281,7 @@ function EventDetailModal({ event, onClose, onSave, onDelete }: {
           <div className="flex items-center justify-between pt-2">
             {confirmingDelete ? (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Delete this event?</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Delete this event?</span>
                 <button
                   type="button"
                   onClick={handleDelete}
@@ -293,7 +293,7 @@ function EventDetailModal({ event, onClose, onSave, onDelete }: {
                 <button
                   type="button"
                   onClick={() => setConfirmingDelete(false)}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                 >
                   Cancel
                 </button>
@@ -302,7 +302,7 @@ function EventDetailModal({ event, onClose, onSave, onDelete }: {
               <button
                 type="button"
                 onClick={() => setConfirmingDelete(true)}
-                className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors"
               >
                 Delete
               </button>
@@ -311,7 +311,7 @@ function EventDetailModal({ event, onClose, onSave, onDelete }: {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
               >
                 Cancel
               </button>
@@ -355,9 +355,9 @@ function MonthView({ viewDate, today, events, tasks, reminders, onDayClick, onEv
 
   return (
     <>
-      <div className="grid grid-cols-7 border-b border-gray-200">
+      <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
         {DAYS_OF_WEEK_SHORT.map((d) => (
-          <div key={d} className="py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <div key={d} className="py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
             {d}
           </div>
         ))}
@@ -381,8 +381,8 @@ function MonthView({ viewDate, today, events, tasks, reminders, onDayClick, onEv
               key={i}
               onClick={() => cell.currentMonth && onDayClick(cellDate)}
               className={`
-                min-h-[44px] sm:min-h-[72px] p-1 sm:p-2 border-b border-r border-gray-100
-                ${!cell.currentMonth ? "bg-gray-50" : "bg-white hover:bg-blue-50 cursor-pointer"}
+                min-h-[44px] sm:min-h-[72px] p-1 sm:p-2 border-b border-r border-gray-100 dark:border-gray-800
+                ${!cell.currentMonth ? "bg-gray-50 dark:bg-gray-800" : "bg-white dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-gray-800 cursor-pointer"}
                 ${i % 7 === 6 ? "border-r-0" : ""}
               `}
             >
@@ -390,8 +390,8 @@ function MonthView({ viewDate, today, events, tasks, reminders, onDayClick, onEv
                 className={`
                   inline-flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm
                   ${isToday ? "bg-blue-600 text-white font-semibold" : ""}
-                  ${!isToday && cell.currentMonth ? "text-gray-900" : ""}
-                  ${!isToday && !cell.currentMonth ? "text-gray-400" : ""}
+                  ${!isToday && cell.currentMonth ? "text-gray-900 dark:text-white" : ""}
+                  ${!isToday && !cell.currentMonth ? "text-gray-400 dark:text-gray-600" : ""}
                 `}
               >
                 {cell.day}
@@ -425,7 +425,7 @@ function MonthView({ viewDate, today, events, tasks, reminders, onDayClick, onEv
                   </div>
                 ))}
                 {totalItems > 2 && (
-                  <div className="text-xs text-gray-500 px-1">+{totalItems - 2} more</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 px-1">+{totalItems - 2} more</div>
                 )}
               </div>
             </div>
@@ -479,16 +479,16 @@ function WeekView({ viewDate, today, events, tasks, reminders, onEventClick, onT
   return (
     <div className="overflow-x-auto">
       {/* Day headers */}
-      <div ref={headerRef} className="grid border-b border-gray-200" style={{ gridTemplateColumns: "56px repeat(7, 1fr)" }}>
-        <div className="border-r border-gray-200" />
+      <div ref={headerRef} className="grid border-b border-gray-200 dark:border-gray-700" style={{ gridTemplateColumns: "56px repeat(7, 1fr)" }}>
+        <div className="border-r border-gray-200 dark:border-gray-700" />
         {days.map((day, i) => {
           const isToday = isSameDay(day, today);
           return (
-            <div key={i} className="py-2 text-center border-r border-gray-200 last:border-r-0">
-              <div className="text-xs text-gray-500 uppercase">{DAYS_OF_WEEK_SHORT[day.getDay()]}</div>
+            <div key={i} className="py-2 text-center border-r border-gray-200 dark:border-gray-700 last:border-r-0">
+              <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">{DAYS_OF_WEEK_SHORT[day.getDay()]}</div>
               <div className={`
                 mx-auto mt-0.5 w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium
-                ${isToday ? "bg-blue-600 text-white" : "text-gray-900"}
+                ${isToday ? "bg-blue-600 text-white" : "text-gray-900 dark:text-white"}
               `}>
                 {day.getDate()}
               </div>
@@ -501,12 +501,12 @@ function WeekView({ viewDate, today, events, tasks, reminders, onEventClick, onT
       <div ref={scrollRef} className="overflow-y-auto" style={{ height: `${12 * CELL_HEIGHT}px` }}>
         <div className="relative">
           {HOURS.map((hour) => (
-            <div key={hour} className="grid border-b border-gray-100" style={{ gridTemplateColumns: "56px repeat(7, 1fr)", height: `${CELL_HEIGHT}px` }}>
-              <div className="pr-2 pb-2 text-right text-xs text-gray-400 border-r border-gray-200 leading-none">
+            <div key={hour} className="grid border-b border-gray-100 dark:border-gray-800" style={{ gridTemplateColumns: "56px repeat(7, 1fr)", height: `${CELL_HEIGHT}px` }}>
+              <div className="pr-2 pb-2 text-right text-xs text-gray-400 dark:text-gray-500 border-r border-gray-200 dark:border-gray-700 leading-none">
                 {formatHour(hour)}
               </div>
               {days.map((_, i) => (
-                <div key={i} className="border-r border-gray-100 last:border-r-0" />
+                <div key={i} className="border-r border-gray-100 dark:border-gray-800 last:border-r-0" />
               ))}
             </div>
           ))}
@@ -602,16 +602,16 @@ function DayView({ viewDate, today, events, tasks, reminders, onEventClick, onTa
   return (
     <div>
       {/* Day header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
         <div className={`
           w-10 h-10 flex items-center justify-center rounded-full text-lg font-semibold
-          ${isToday ? "bg-blue-600 text-white" : "text-gray-900"}
+          ${isToday ? "bg-blue-600 text-white" : "text-gray-900 dark:text-white"}
         `}>
           {viewDate.getDate()}
         </div>
         <div>
-          <div className="text-sm font-medium text-gray-900">{DAYS_OF_WEEK_FULL[viewDate.getDay()]}</div>
-          <div className="text-xs text-gray-500">{MONTH_NAMES[viewDate.getMonth()]} {viewDate.getFullYear()}</div>
+          <div className="text-sm font-medium text-gray-900 dark:text-white">{DAYS_OF_WEEK_FULL[viewDate.getDay()]}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">{MONTH_NAMES[viewDate.getMonth()]} {viewDate.getFullYear()}</div>
         </div>
       </div>
 
@@ -621,8 +621,8 @@ function DayView({ viewDate, today, events, tasks, reminders, onEventClick, onTa
           {HOURS.map((hour) => {
             const isCurrentHour = isToday && hour === currentHour;
             return (
-              <div key={hour} className={`relative flex border-b border-gray-100 ${isCurrentHour ? "bg-blue-50" : ""}`} style={{ height: `${CELL_HEIGHT}px` }}>
-                <div className={`w-14 shrink-0 pr-2 pb-2 text-right text-xs border-r border-gray-200 leading-none ${isCurrentHour ? "text-blue-600 font-semibold" : "text-gray-400"}`}>
+              <div key={hour} className={`relative flex border-b border-gray-100 dark:border-gray-800 ${isCurrentHour ? "bg-blue-50 dark:bg-[#0d2818]" : ""}`} style={{ height: `${CELL_HEIGHT}px` }}>
+                <div className={`w-14 shrink-0 pr-2 pb-2 text-right text-xs border-r border-gray-200 dark:border-gray-700 leading-none ${isCurrentHour ? "text-blue-600 dark:text-moss font-semibold" : "text-gray-400 dark:text-gray-500"}`}>
                   {formatHour(hour)}
                 </div>
                 <div className="flex-1" />
@@ -791,7 +791,7 @@ export default function CalendarPage() {
     <div className="p-4 sm:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-900">Calendar</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Calendar</h1>
           <button
             onClick={() => setShowCreateModal(true)}
             className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
@@ -801,7 +801,7 @@ export default function CalendarPage() {
         </div>
 
         {/* View switcher */}
-        <div className="flex rounded-lg border border-gray-200 overflow-hidden self-start sm:self-auto">
+        <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden self-start sm:self-auto">
           {views.map(({ key, label }) => (
             <button
               key={key}
@@ -810,7 +810,7 @@ export default function CalendarPage() {
                 px-3 py-1.5 text-sm font-medium transition-colors
                 ${view === key
                   ? "bg-blue-600 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50"}
+                  : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"}
               `}
             >
               {label}
@@ -819,22 +819,22 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow border border-gray-200 overflow-hidden w-full max-w-3xl">
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow border border-gray-200 dark:border-gray-700 overflow-hidden w-full max-w-3xl">
         {/* Navigation header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setViewDate(navDate(view, viewDate, -1))}
-            className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors text-xl leading-none"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-xl leading-none"
             aria-label="Previous"
           >
             &#8249;
           </button>
-          <span className="text-base sm:text-lg font-semibold text-gray-900">
+          <span className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
             {headerLabel(view, viewDate)}
           </span>
           <button
             onClick={() => setViewDate(navDate(view, viewDate, 1))}
-            className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors text-xl leading-none"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-xl leading-none"
             aria-label="Next"
           >
             &#8250;

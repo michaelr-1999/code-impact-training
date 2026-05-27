@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { getMe, putProfile, putPassword } from "../api/auth";
 
 type User = { id: string; name: string; email: string };
@@ -9,6 +10,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function ProfilePage() {
   const { user: ctxUser, token, updateUser, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const [user, setUser] = useState<User | null>(ctxUser);
@@ -110,13 +112,13 @@ export default function ProfilePage() {
     return (
       <div className="p-4 sm:p-8 max-w-lg">
         <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-gray-200 rounded w-1/3" />
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
+          <div className="h-6 bg-gray-200 dark:bg-gray-800 rounded w-1/3" />
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-4">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gray-200 rounded-full shrink-0" />
+              <div className="w-14 h-14 bg-gray-200 dark:bg-gray-800 rounded-full shrink-0" />
               <div className="space-y-2 flex-1">
-                <div className="h-4 bg-gray-200 rounded w-1/2" />
-                <div className="h-3 bg-gray-200 rounded w-2/3" />
+                <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/2" />
+                <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-2/3" />
               </div>
             </div>
           </div>
@@ -136,54 +138,75 @@ export default function ProfilePage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-lg space-y-4">
-      <div className="mb-2">
-        <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
+      <div className="mb-2 flex items-center gap-3">
+        <button
+          onClick={toggleTheme}
+          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-moss transition-colors"
+        >
+          {isDark ? (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              Light
+            </>
+          ) : (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+              Dark
+            </>
+          )}
+        </button>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profile</h1>
       </div>
 
       {/* Profile card */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
         {!editing ? (
           <>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                  <span className="text-lg font-semibold text-blue-700">{initials}</span>
+                <div className="w-14 h-14 rounded-full bg-blue-100 dark:bg-moss-subtle flex items-center justify-center shrink-0">
+                  <span className="text-lg font-semibold text-blue-700 dark:text-moss">{initials}</span>
                 </div>
                 <div>
-                  <p className="text-base font-semibold text-gray-900">{user.name}</p>
-                  <p className="text-sm text-gray-500 mt-0.5">{user.email}</p>
+                  <p className="text-base font-semibold text-gray-900 dark:text-white">{user.name}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{user.email}</p>
                 </div>
               </div>
               <button
                 onClick={startEditing}
-                className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-moss dark:hover:text-moss-hover"
               >
                 Edit profile
               </button>
             </div>
             {profileSuccess && (
-              <p className="mt-3 text-sm text-green-600">{profileSuccess}</p>
+              <p className="mt-3 text-sm text-green-600 dark:text-moss">{profileSuccess}</p>
             )}
           </>
         ) : (
           <div className="space-y-3">
-            <h2 className="text-sm font-semibold text-gray-700">Edit profile</h2>
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Edit profile</h2>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Name</label>
               <input
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-moss bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Email</label>
               <input
                 type="email"
                 value={editEmail}
                 onChange={(e) => setEditEmail(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-moss bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
               />
             </div>
             {profileError && <p className="text-sm text-red-500">{profileError}</p>}
@@ -191,13 +214,13 @@ export default function ProfilePage() {
               <button
                 onClick={handleSaveProfile}
                 disabled={profileSaving}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:bg-moss dark:hover:bg-moss-hover dark:text-black dark:disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
               >
                 {profileSaving ? "Saving…" : "Save changes"}
               </button>
               <button
                 onClick={cancelEditing}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
                 Cancel
               </button>
@@ -207,9 +230,9 @@ export default function ProfilePage() {
       </div>
 
       {/* Sign out */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <h2 className="text-sm font-semibold text-gray-700 mb-1">Sign out</h2>
-        <p className="text-sm text-gray-500 mb-3">You will be redirected to the login page.</p>
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Sign out</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">You will be redirected to the login page.</p>
         <button
           onClick={() => { logout(); navigate("/login", { replace: true }); }}
           className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
@@ -219,42 +242,42 @@ export default function ProfilePage() {
       </div>
 
       {/* Change password card */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <h2 className="text-sm font-semibold text-gray-700 mb-3">Change password</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Change password</h2>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Current password</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Current password</label>
             <input
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-moss bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">New password</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">New password</label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-moss bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Confirm new password</label>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Confirm new password</label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-moss bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             />
           </div>
           {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
-          {passwordSuccess && <p className="text-sm text-green-600">{passwordSuccess}</p>}
+          {passwordSuccess && <p className="text-sm text-green-600 dark:text-moss">{passwordSuccess}</p>}
           <button
             onClick={handleChangePassword}
             disabled={passwordSaving}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-lg transition-colors"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 dark:bg-moss dark:hover:bg-moss-hover dark:text-black dark:disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
           >
             {passwordSaving ? "Updating…" : "Update password"}
           </button>

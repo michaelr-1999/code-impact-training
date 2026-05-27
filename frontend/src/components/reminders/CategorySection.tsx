@@ -23,14 +23,14 @@ export function CategorySection({ name, reminders, onToggle, onEdit }: Props) {
   const sorted = sortByScheduledTime(reminders);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-3">
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-3">
       <button
         onClick={() => setExpanded((v) => !v)}
         className="w-full flex items-center justify-between px-4 py-3 text-left"
       >
-        <span className="text-sm font-semibold text-gray-700">{name}</span>
+        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{name}</span>
         <svg
-          className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? "rotate-180" : ""}`}
+          className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform ${expanded ? "rotate-180" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -40,9 +40,9 @@ export function CategorySection({ name, reminders, onToggle, onEdit }: Props) {
         </svg>
       </button>
       {expanded && (
-        <div className="px-4 pb-3 border-t border-gray-100">
+        <div className="px-4 pb-3 border-t border-gray-100 dark:border-gray-700">
           {sorted.length === 0 ? (
-            <p className="text-sm text-gray-400 py-2">No reminders</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 py-2">No reminders</p>
           ) : (
             sorted.map((r) => (
               <ReminderItem key={r.id} reminder={r} onToggle={onToggle} onEdit={onEdit} />

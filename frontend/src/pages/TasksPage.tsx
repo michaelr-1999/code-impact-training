@@ -66,7 +66,7 @@ export default function TasksPage() {
   return (
     <div className="p-4 sm:p-8 max-w-2xl">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Tasks</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tasks</h1>
         <button
           onClick={openCreate}
           className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"

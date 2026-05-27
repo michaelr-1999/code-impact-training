@@ -21,19 +21,19 @@ export function TaskList({ title, tasks, emptyMessage, onToggle, onEdit, collaps
         <button
           type="button"
           onClick={() => setExpanded(v => !v)}
-          className="flex items-center gap-2 text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           <span className={`text-xs inline-block transition-transform ${expanded ? "rotate-90" : ""}`}>▶</span>
-          {title} <span className="text-gray-400 font-normal normal-case">({tasks.length})</span>
+          {title} <span className="text-gray-400 dark:text-gray-500 font-normal normal-case">({tasks.length})</span>
         </button>
       ) : (
-        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
-          {title} <span className="text-gray-400 font-normal normal-case">({tasks.length})</span>
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3">
+          {title} <span className="text-gray-400 dark:text-gray-500 font-normal normal-case">({tasks.length})</span>
         </h2>
       )}
       {visible && (
         tasks.length === 0 ? (
-          <p className="text-sm text-gray-400 italic">{emptyMessage}</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 italic">{emptyMessage}</p>
         ) : (
           <div className="space-y-2">
             {tasks.map(task => (
