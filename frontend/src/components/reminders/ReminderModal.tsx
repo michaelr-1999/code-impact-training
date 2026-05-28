@@ -26,11 +26,16 @@ interface Props {
 
 export function ReminderModal({ reminder, categories, onClose, onSave, onDelete, onCategoriesChange }: Props) {
   const isEdit = reminder !== null;
+  const isSeries = isEdit && reminder.seriesId !== null;
   const [title, setTitle] = useState(reminder?.title ?? "");
   const [scheduledTime, setScheduledTime] = useState(
     reminder?.scheduledTime ? toDateTimeLocal(reminder.scheduledTime) : ""
   );
   const [categoryId, setCategoryId] = useState(reminder?.categoryId ?? "");
+  const [repeats, setRepeats] = useState(false);
+  const [repeatCount, setRepeatCount] = useState(isSeries ? 1 : 2);
+  const [repeatInterval, setRepeatInterval] = useState(reminder?.repeatInterval ?? 1);
+  const [repeatUnit, setRepeatUnit] = useState(reminder?.repeatUnit ?? "day");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -56,21 +61,33 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
     setSubmitting(true);
     setError("");
     try {
-      let saved: ApiReminder;
       if (isEdit) {
-        saved = await updateReminder(reminder.id, {
+        const saved = await updateReminder(reminder.id, {
           title: title.trim(),
           scheduledTime: scheduledTime ? new Date(scheduledTime).toISOString() : null,
           categoryId: categoryId || null,
         });
+        onSave(saved);
+        if (repeats && isSeries) {
+          const items = await createReminder({
+            title: title.trim(),
+            ...(categoryId && { categoryId }),
+            seriesId: reminder.seriesId!,
+            repeatCount,
+            repeatInterval,
+            repeatUnit,
+          });
+          items.forEach((item) => onSave(item));
+        }
       } else {
-        saved = await createReminder({
+        const items = await createReminder({
           title: title.trim(),
           ...(scheduledTime && { scheduledTime: new Date(scheduledTime).toISOString() }),
           ...(categoryId && { categoryId }),
+          ...(repeats && { repeatCount, repeatInterval, repeatUnit }),
         });
+        items.forEach((item) => onSave(item));
       }
-      onSave(saved);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : isEdit ? "Failed to save reminder" : "Failed to create reminder");
@@ -220,6 +237,59 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
               </div>
             )}
           </div>
+
+          {(!isEdit || isSeries) && (
+            <div>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={repeats}
+                  onChange={(e) => setRepeats(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-amber-500 focus:ring-amber-500"
+                />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {isSeries ? "Add more occurrences" : "Repeating"}
+                </span>
+              </label>
+              {repeats && (
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 w-20">
+                      {isSeries ? "Additional" : "Occurrences"}
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={365}
+                      value={repeatCount}
+                      onChange={(e) => setRepeatCount(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 w-20">Repeat every</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={repeatInterval}
+                      onChange={(e) => setRepeatInterval(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
+                    />
+                    <select
+                      value={repeatUnit}
+                      onChange={(e) => setRepeatUnit(e.target.value)}
+                      className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    >
+                      <option value="day">day(s)</option>
+                      <option value="week">week(s)</option>
+                      <option value="month">month(s)</option>
+                      <option value="year">year(s)</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex items-center justify-between pt-2">
             {isEdit ? (

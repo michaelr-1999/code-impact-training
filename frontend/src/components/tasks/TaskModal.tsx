@@ -6,6 +6,17 @@ function toDateTimeLocal(date: Date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function addInterval(date: Date, interval: number, unit: string): Date {
+  const d = new Date(date);
+  switch (unit) {
+    case "day":   d.setDate(d.getDate() + interval); break;
+    case "week":  d.setDate(d.getDate() + interval * 7); break;
+    case "month": d.setMonth(d.getMonth() + interval); break;
+    case "year":  d.setFullYear(d.getFullYear() + interval); break;
+  }
+  return d;
+}
+
 interface Props {
   task: ApiTask | null;
   onClose: () => void;
@@ -15,11 +26,16 @@ interface Props {
 
 export function TaskModal({ task, onClose, onSave, onDelete }: Props) {
   const isEdit = task !== null;
+  const isSeries = isEdit && task.seriesId !== null;
   const [title, setTitle] = useState(task?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
   const [dueDate, setDueDate] = useState(
     task?.dueDate ? toDateTimeLocal(new Date(task.dueDate)) : ""
   );
+  const [repeats, setRepeats] = useState(false);
+  const [repeatCount, setRepeatCount] = useState(isSeries ? 1 : 2);
+  const [repeatInterval, setRepeatInterval] = useState(task?.repeatInterval ?? 1);
+  const [repeatUnit, setRepeatUnit] = useState(task?.repeatUnit ?? "day");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -39,21 +55,48 @@ export function TaskModal({ task, onClose, onSave, onDelete }: Props) {
     setSubmitting(true);
     setError("");
     try {
-      let saved: ApiTask;
       if (isEdit) {
-        saved = await updateTask(task.id, {
+        const saved = await updateTask(task.id, {
           title: title.trim(),
           description: description.trim() || null,
           dueDate: dueDate ? new Date(dueDate).toISOString() : null,
         });
+        onSave(saved);
+        if (repeats) {
+          if (isSeries) {
+            // Add more to existing series — backend finds the last item
+            const items = await createTask({
+              title: title.trim(),
+              ...(description.trim() && { description: description.trim() }),
+              seriesId: task.seriesId!,
+              repeatCount,
+              repeatInterval,
+              repeatUnit,
+            });
+            items.forEach((item) => onSave(item));
+          } else if (dueDate) {
+            // Start a new series from this task's due date
+            const nextDate = addInterval(new Date(dueDate), repeatInterval, repeatUnit);
+            const items = await createTask({
+              title: title.trim(),
+              ...(description.trim() && { description: description.trim() }),
+              dueDate: nextDate.toISOString(),
+              repeatCount,
+              repeatInterval,
+              repeatUnit,
+            });
+            items.forEach((item) => onSave(item));
+          }
+        }
       } else {
-        saved = await createTask({
+        const items = await createTask({
           title: title.trim(),
           ...(description.trim() && { description: description.trim() }),
           ...(dueDate && { dueDate: new Date(dueDate).toISOString() }),
+          ...(repeats && { repeatCount, repeatInterval, repeatUnit }),
         });
+        items.forEach((item) => onSave(item));
       }
-      onSave(saved);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : isEdit ? "Failed to save task" : "Failed to create task");
@@ -126,6 +169,57 @@ export function TaskModal({ task, onClose, onSave, onDelete }: Props) {
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={repeats}
+                onChange={(e) => setRepeats(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-green-600 focus:ring-green-500"
+              />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {isSeries ? "Add more occurrences" : "Repeating"}
+              </span>
+            </label>
+            {repeats && (
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-400 w-20">
+                    {isSeries ? "Additional" : isEdit ? "Additional" : "Occurrences"}
+                  </span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={repeatCount}
+                    onChange={(e) => setRepeatCount(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-400 w-20">Repeat every</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={repeatInterval}
+                    onChange={(e) => setRepeatInterval(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
+                  />
+                  <select
+                    value={repeatUnit}
+                    onChange={(e) => setRepeatUnit(e.target.value)}
+                    className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="day">day(s)</option>
+                    <option value="week">week(s)</option>
+                    <option value="month">month(s)</option>
+                    <option value="year">year(s)</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center justify-between pt-2">
             {isEdit ? (
               confirmingDelete ? (

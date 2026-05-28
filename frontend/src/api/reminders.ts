@@ -13,6 +13,9 @@ export interface ApiReminder {
   isDone: boolean;
   categoryId: string | null;
   category: ApiReminderCategory | null;
+  repeatInterval: number | null;
+  repeatUnit: string | null;
+  seriesId: string | null;
 }
 
 export async function getReminders(start?: string, end?: string): Promise<ApiReminder[]> {
@@ -37,19 +40,23 @@ export async function createReminder(data: {
   title: string;
   scheduledTime?: string;
   categoryId?: string;
-}): Promise<ApiReminder> {
+  repeatInterval?: number;
+  repeatUnit?: string;
+  repeatCount?: number;
+  seriesId?: string;
+}): Promise<ApiReminder[]> {
   const res = await apiFetch("/api/reminders", {
     method: "POST",
     body: JSON.stringify(data),
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.error ?? "Failed to create reminder");
-  return json.data as ApiReminder;
+  return json.data as ApiReminder[];
 }
 
 export async function updateReminder(
   id: string,
-  data: { title?: string; scheduledTime?: string | null; categoryId?: string | null }
+  data: { title?: string; scheduledTime?: string | null; categoryId?: string | null; repeatInterval?: number | null; repeatUnit?: string | null }
 ): Promise<ApiReminder> {
   const res = await apiFetch(`/api/reminders/${id}`, {
     method: "PUT",

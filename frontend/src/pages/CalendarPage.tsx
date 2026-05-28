@@ -50,7 +50,7 @@ function startOfWeek(date: Date) {
 function CreateEventModal({ defaultDate, onClose, onSubmit }: {
   defaultDate: Date;
   onClose: () => void;
-  onSubmit: (data: { title: string; description: string; start: string; end: string }) => Promise<void>;
+  onSubmit: (data: { title: string; description: string; start: string; end: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number }) => Promise<void>;
 }) {
   const defaultStart = new Date(defaultDate);
   defaultStart.setHours(9, 0, 0, 0);
@@ -61,6 +61,10 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
   const [description, setDescription] = useState("");
   const [start, setStart] = useState(toDateTimeLocal(defaultStart));
   const [end, setEnd] = useState(toDateTimeLocal(defaultEnd));
+  const [repeats, setRepeats] = useState(false);
+  const [repeatCount, setRepeatCount] = useState(2);
+  const [repeatInterval, setRepeatInterval] = useState(1);
+  const [repeatUnit, setRepeatUnit] = useState("day");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -71,7 +75,13 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
     setSubmitting(true);
     setError("");
     try {
-      await onSubmit({ title: title.trim(), description: description.trim(), start, end });
+      await onSubmit({
+        title: title.trim(),
+        description: description.trim(),
+        start,
+        end,
+        ...(repeats && { repeatCount, repeatInterval, repeatUnit }),
+      });
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create event");
@@ -141,6 +151,52 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
               />
             </div>
           </div>
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={repeats}
+                onChange={(e) => setRepeats(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Repeating</span>
+            </label>
+            {repeats && (
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-400 w-20">Occurrences</span>
+                  <input
+                    type="number"
+                    min={2}
+                    max={365}
+                    value={repeatCount}
+                    onChange={(e) => setRepeatCount(Math.max(2, parseInt(e.target.value) || 2))}
+                    className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600 dark:text-gray-400 w-20">Repeat every</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={repeatInterval}
+                    onChange={(e) => setRepeatInterval(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
+                  />
+                  <select
+                    value={repeatUnit}
+                    onChange={(e) => setRepeatUnit(e.target.value)}
+                    className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="day">day(s)</option>
+                    <option value="week">week(s)</option>
+                    <option value="month">month(s)</option>
+                    <option value="year">year(s)</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex justify-end gap-3 pt-2">
             <button
@@ -166,16 +222,22 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
 
 // ── Event detail / edit modal ─────────────────────────────────────────────────
 
-function EventDetailModal({ event, onClose, onSave, onDelete }: {
+function EventDetailModal({ event, onClose, onSave, onDelete, onAddMore }: {
   event: CalendarEvent;
   onClose: () => void;
   onSave: (updated: CalendarEvent) => void;
   onDelete: (id: string) => void;
+  onAddMore: (items: CalendarEvent[]) => void;
 }) {
+  const isSeries = event.seriesId !== null;
   const [title, setTitle] = useState(event.title);
   const [description, setDescription] = useState(event.description ?? "");
   const [start, setStart] = useState(toDateTimeLocal(new Date(event.startTime)));
   const [end, setEnd] = useState(toDateTimeLocal(new Date(event.endTime)));
+  const [addMore, setAddMore] = useState(false);
+  const [repeatCount, setRepeatCount] = useState(1);
+  const [repeatInterval, setRepeatInterval] = useState(event.repeatInterval ?? 1);
+  const [repeatUnit, setRepeatUnit] = useState(event.repeatUnit ?? "day");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -195,6 +257,15 @@ function EventDetailModal({ event, onClose, onSave, onDelete }: {
         end,
       });
       onSave(updated);
+      if (addMore && isSeries) {
+        const items = await createEvent({
+          seriesId: event.seriesId!,
+          repeatCount,
+          repeatInterval,
+          repeatUnit,
+        });
+        onAddMore(items);
+      }
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save event");
@@ -277,6 +348,54 @@ function EventDetailModal({ event, onClose, onSave, onDelete }: {
               />
             </div>
           </div>
+          {isSeries && (
+            <div>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={addMore}
+                  onChange={(e) => setAddMore(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Add more occurrences</span>
+              </label>
+              {addMore && (
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 w-20">Additional</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={365}
+                      value={repeatCount}
+                      onChange={(e) => setRepeatCount(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 w-20">Repeat every</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={repeatInterval}
+                      onChange={(e) => setRepeatInterval(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
+                    />
+                    <select
+                      value={repeatUnit}
+                      onChange={(e) => setRepeatUnit(e.target.value)}
+                      className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    >
+                      <option value="day">day(s)</option>
+                      <option value="week">week(s)</option>
+                      <option value="month">month(s)</option>
+                      <option value="year">year(s)</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex items-center justify-between pt-2">
             {confirmingDelete ? (
@@ -783,9 +902,9 @@ export default function CalendarPage() {
       .catch(() => {});
   }, [view, viewDate]);
 
-  async function handleSubmit(data: { title: string; description: string; start: string; end: string }) {
-    const event = await createEvent(data);
-    setEvents((prev) => [...prev, event]);
+  async function handleSubmit(data: { title: string; description: string; start: string; end: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number }) {
+    const created = await createEvent(data);
+    setEvents((prev) => [...prev, ...created]);
   }
 
   function handleSave(updated: CalendarEvent) {
@@ -794,6 +913,10 @@ export default function CalendarPage() {
 
   function handleDelete(id: string) {
     setEvents((prev) => prev.filter((e) => e.id !== id));
+  }
+
+  function handleAddMore(items: CalendarEvent[]) {
+    setEvents((prev) => [...prev, ...items]);
   }
 
   const views: { key: View; label: string }[] = [
@@ -875,6 +998,7 @@ export default function CalendarPage() {
           onClose={() => setSelectedEvent(null)}
           onSave={handleSave}
           onDelete={handleDelete}
+          onAddMore={handleAddMore}
         />
       )}
     </div>

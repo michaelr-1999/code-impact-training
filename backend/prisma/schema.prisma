@@ -19,28 +19,34 @@ model User {
 }
 
 model Event {
-  id          String   @id @default(uuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title       String
-  description String?
-  startTime   DateTime
-  endTime     DateTime
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  startTime      DateTime
+  endTime        DateTime
+  repeatInterval Int?
+  repeatUnit     String?
+  seriesId       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model Reminder {
-  id            String            @id @default(uuid())
-  userId        String
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title         String
-  scheduledTime DateTime?
-  isDone        Boolean           @default(false)
-  categoryId    String?
-  category      ReminderCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  id             String            @id @default(uuid())
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title          String
+  scheduledTime  DateTime?
+  isDone         Boolean           @default(false)
+  categoryId     String?
+  category       ReminderCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  repeatInterval Int?
+  repeatUnit     String?
+  seriesId       String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 }
 
 model ReminderCategory {
@@ -52,13 +58,16 @@ model ReminderCategory {
 }
 
 model Task {
-  id          String    @id @default(uuid())
-  title       String
-  description String?
-  dueDate     DateTime?
-  completedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String    @id @default(uuid())
+  title          String
+  description    String?
+  dueDate        DateTime?
+  completedAt    DateTime?
+  repeatInterval Int?
+  repeatUnit     String?
+  seriesId       String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

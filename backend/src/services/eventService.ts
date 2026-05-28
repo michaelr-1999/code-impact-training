@@ -21,6 +21,8 @@ export async function updateEvent(id: string, userId: string, data: {
   description?: string;
   startTime: Date;
   endTime: Date;
+  repeatInterval?: number | null;
+  repeatUnit?: string | null;
 }) {
   return prisma.event.update({
     where: { id, userId },
@@ -33,6 +35,9 @@ export async function createEvent(userId: string, data: {
   description?: string;
   startTime: Date;
   endTime: Date;
+  repeatInterval?: number;
+  repeatUnit?: string;
+  seriesId?: string;
 }) {
   return prisma.event.create({
     data: {
@@ -41,6 +46,16 @@ export async function createEvent(userId: string, data: {
       description: data.description,
       startTime: data.startTime,
       endTime: data.endTime,
+      repeatInterval: data.repeatInterval,
+      repeatUnit: data.repeatUnit,
+      seriesId: data.seriesId,
     },
+  });
+}
+
+export async function getSeriesLastEvent(seriesId: string, userId: string) {
+  return prisma.event.findFirst({
+    where: { seriesId, userId },
+    orderBy: { startTime: "desc" },
   });
 }

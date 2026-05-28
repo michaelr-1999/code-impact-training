@@ -11,16 +11,41 @@ export async function getTasks(userId: string, start?: Date, end?: Date, include
   });
 }
 
-export async function createTask(userId: string, data: { title: string; description?: string; dueDate?: Date }) {
+export async function createTask(
+  userId: string,
+  data: { title: string; description?: string; dueDate?: Date; repeatInterval?: number; repeatUnit?: string; seriesId?: string }
+) {
   return prisma.task.create({
-    data: { userId, title: data.title, description: data.description, dueDate: data.dueDate },
+    data: {
+      userId,
+      title: data.title,
+      description: data.description,
+      dueDate: data.dueDate,
+      repeatInterval: data.repeatInterval,
+      repeatUnit: data.repeatUnit,
+      seriesId: data.seriesId,
+    },
+  });
+}
+
+export async function getSeriesLastTask(seriesId: string, userId: string) {
+  return prisma.task.findFirst({
+    where: { seriesId, userId },
+    orderBy: { dueDate: "desc" },
   });
 }
 
 export async function updateTask(
   id: string,
   userId: string,
-  data: { title?: string; description?: string | null; dueDate?: Date | null; completedAt?: Date | null }
+  data: {
+    title?: string;
+    description?: string | null;
+    dueDate?: Date | null;
+    completedAt?: Date | null;
+    repeatInterval?: number | null;
+    repeatUnit?: string | null;
+  }
 ) {
   const task = await prisma.task.findFirst({ where: { id, userId } });
   if (!task) return null;
