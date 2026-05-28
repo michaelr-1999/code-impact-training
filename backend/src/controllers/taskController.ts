@@ -1,6 +1,18 @@
 import { Request, Response } from "express";
-import { getTasks, createTask, updateTask, deleteTask } from "../services/taskService";
+import { randomUUID } from "crypto";
+import { getTasks, createTask, updateTask, deleteTask, getSeriesLastTask } from "../services/taskService";
 import { AppError } from "../lib/errors";
+
+function addInterval(date: Date, interval: number, unit: string): Date {
+  const d = new Date(date);
+  switch (unit) {
+    case "day":   d.setDate(d.getDate() + interval); break;
+    case "week":  d.setDate(d.getDate() + interval * 7); break;
+    case "month": d.setMonth(d.getMonth() + interval); break;
+    case "year":  d.setFullYear(d.getFullYear() + interval); break;
+  }
+  return d;
+}
 
 export async function getTasksController(req: Request, res: Response) {
   const start = req.query.start ? new Date(req.query.start as string) : undefined;
@@ -17,18 +29,41 @@ export async function getTasksController(req: Request, res: Response) {
 }
 
 export async function createTaskController(req: Request, res: Response) {
-  const { title, description, dueDate } = req.body;
+  const { title, description, dueDate, repeatInterval, repeatUnit, repeatCount, seriesId: bodySeriesId } = req.body;
   if (!title || typeof title !== "string") {
     res.status(400).json({ success: false, error: "title is required" });
     return;
   }
+  const count = Math.min(Math.max(1, Math.floor(Number(repeatCount) || 1)), 365);
+  const interval = Math.max(1, Number(repeatInterval) || 1);
+  const unit = repeatUnit ? String(repeatUnit) : "day";
   try {
-    const task = await createTask(req.user.id, {
-      title: title.trim(),
-      description: description ? String(description).trim() : undefined,
-      dueDate: dueDate ? new Date(dueDate) : undefined,
-    });
-    res.status(201).json({ success: true, data: task });
+    let resolvedSeriesId: string | undefined;
+    let baseDate: Date | undefined;
+    let startIndex = 0;
+
+    if (bodySeriesId && typeof bodySeriesId === "string") {
+      resolvedSeriesId = bodySeriesId;
+      const last = await getSeriesLastTask(resolvedSeriesId, req.user.id);
+      baseDate = last?.dueDate ?? undefined;
+      startIndex = 1;
+    } else {
+      baseDate = dueDate ? new Date(dueDate) : undefined;
+      if (repeatUnit && count > 1) resolvedSeriesId = randomUUID();
+    }
+
+    const items = [];
+    for (let i = startIndex; i < startIndex + count; i++) {
+      const due = baseDate && repeatUnit ? addInterval(baseDate, interval * i, unit) : baseDate;
+      items.push(await createTask(req.user.id, {
+        title: title.trim(),
+        description: description ? String(description).trim() : undefined,
+        dueDate: due,
+        ...(repeatUnit && { repeatInterval: interval, repeatUnit: unit }),
+        seriesId: resolvedSeriesId,
+      }));
+    }
+    res.status(201).json({ success: true, data: items });
   } catch (err) {
     const status = err instanceof AppError ? err.statusCode : 500;
     const message = err instanceof Error ? err.message : "Internal server error";
@@ -38,12 +73,14 @@ export async function createTaskController(req: Request, res: Response) {
 
 export async function updateTaskController(req: Request, res: Response) {
   const { id } = req.params;
-  const { title, description, dueDate, completedAt } = req.body;
+  const { title, description, dueDate, completedAt, repeatInterval, repeatUnit } = req.body;
   const data: Parameters<typeof updateTask>[2] = {};
   if (title !== undefined) data.title = String(title).trim();
   if (description !== undefined) data.description = description ? String(description).trim() : null;
   if (dueDate !== undefined) data.dueDate = dueDate ? new Date(dueDate) : null;
   if (completedAt !== undefined) data.completedAt = completedAt ? new Date(completedAt) : null;
+  if (repeatInterval !== undefined) data.repeatInterval = repeatInterval !== null ? Number(repeatInterval) : null;
+  if (repeatUnit !== undefined) data.repeatUnit = repeatUnit ? String(repeatUnit) : null;
   try {
     const task = await updateTask(id, req.user.id, data);
     if (!task) { res.status(404).json({ success: false, error: "Task not found" }); return; }

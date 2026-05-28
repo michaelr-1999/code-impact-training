@@ -6,6 +6,9 @@ export interface ApiEvent {
   description: string | null;
   startTime: string;
   endTime: string;
+  repeatInterval: number | null;
+  repeatUnit: string | null;
+  seriesId: string | null;
 }
 
 export async function getEvents(start: string, end: string): Promise<ApiEvent[]> {
@@ -28,6 +31,8 @@ export async function updateEvent(id: string, data: {
   description: string;
   start: string;
   end: string;
+  repeatInterval?: number | null;
+  repeatUnit?: string | null;
 }): Promise<ApiEvent> {
   const res = await apiFetch(`/api/events/${id}`, {
     method: "PUT",
@@ -43,20 +48,24 @@ export async function updateEvent(id: string, data: {
 }
 
 export async function createEvent(data: {
-  title: string;
-  description: string;
-  start: string;
-  end: string;
-}): Promise<ApiEvent> {
+  title?: string;
+  description?: string;
+  start?: string;
+  end?: string;
+  repeatInterval?: number;
+  repeatUnit?: string;
+  repeatCount?: number;
+  seriesId?: string;
+}): Promise<ApiEvent[]> {
   const res = await apiFetch("/api/events", {
     method: "POST",
     body: JSON.stringify({
       ...data,
-      start: new Date(data.start).toISOString(),
-      end: new Date(data.end).toISOString(),
+      ...(data.start && { start: new Date(data.start).toISOString() }),
+      ...(data.end && { end: new Date(data.end).toISOString() }),
     }),
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.error ?? "Failed to create event");
-  return json.data as ApiEvent;
+  return json.data as ApiEvent[];
 }

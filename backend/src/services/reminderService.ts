@@ -15,7 +15,7 @@ export async function getReminders(userId: string, start?: Date, end?: Date) {
 
 export async function createReminder(
   userId: string,
-  data: { title: string; scheduledTime?: Date; isDone?: boolean; categoryId?: string }
+  data: { title: string; scheduledTime?: Date; isDone?: boolean; categoryId?: string; repeatInterval?: number; repeatUnit?: string; seriesId?: string }
 ) {
   return prisma.reminder.create({
     data: {
@@ -24,15 +24,32 @@ export async function createReminder(
       scheduledTime: data.scheduledTime,
       isDone: data.isDone ?? false,
       categoryId: data.categoryId,
+      repeatInterval: data.repeatInterval,
+      repeatUnit: data.repeatUnit,
+      seriesId: data.seriesId,
     },
     ...categoryInclude,
+  });
+}
+
+export async function getSeriesLastReminder(seriesId: string, userId: string) {
+  return prisma.reminder.findFirst({
+    where: { seriesId, userId },
+    orderBy: { scheduledTime: "desc" },
   });
 }
 
 export async function updateReminder(
   id: string,
   userId: string,
-  data: { title?: string; scheduledTime?: Date | null; isDone?: boolean; categoryId?: string | null }
+  data: {
+    title?: string;
+    scheduledTime?: Date | null;
+    isDone?: boolean;
+    categoryId?: string | null;
+    repeatInterval?: number | null;
+    repeatUnit?: string | null;
+  }
 ) {
   const reminder = await prisma.reminder.findFirst({ where: { id, userId } });
   if (!reminder) return null;
