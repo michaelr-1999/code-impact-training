@@ -54,13 +54,12 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
 }) {
   const defaultStart = new Date(defaultDate);
   defaultStart.setHours(9, 0, 0, 0);
-  const defaultEnd = new Date(defaultDate);
-  defaultEnd.setHours(10, 0, 0, 0);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [start, setStart] = useState(toDateTimeLocal(defaultStart));
-  const [end, setEnd] = useState(toDateTimeLocal(defaultEnd));
+  const [durationValue, setDurationValue] = useState(1);
+  const [durationUnit, setDurationUnit] = useState<"minutes" | "hours" | "days" | "weeks" | "months">("hours");
   const [repeats, setRepeats] = useState(false);
   const [repeatCount, setRepeatCount] = useState(2);
   const [repeatInterval, setRepeatInterval] = useState(1);
@@ -71,10 +70,20 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) { setError("Title is required."); return; }
-    if (end <= start) { setError("End must be after start."); return; }
+    if (durationValue <= 0) { setError("Duration must be greater than 0."); return; }
     setSubmitting(true);
     setError("");
     try {
+      const startDate = new Date(start);
+      let endDate: Date;
+      if (durationUnit === "months") {
+        endDate = new Date(startDate);
+        endDate.setMonth(endDate.getMonth() + durationValue);
+      } else {
+        const msMap = { minutes: 60 * 1000, hours: 60 * 60 * 1000, days: 24 * 60 * 60 * 1000, weeks: 7 * 24 * 60 * 60 * 1000 };
+        endDate = new Date(startDate.getTime() + durationValue * msMap[durationUnit as keyof typeof msMap]);
+      }
+      const end = toDateTimeLocal(endDate);
       await onSubmit({
         title: title.trim(),
         description: description.trim(),
@@ -92,8 +101,8 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md">
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Create event</h2>
           <button
@@ -127,28 +136,40 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Start <span className="text-red-500">*</span>
-              </label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Start <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="datetime-local"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+              onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch { /* unsupported */ } }}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+            />
+            <div className="h-72" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration</label>
+            <div className="flex items-center gap-2">
               <input
-                type="datetime-local"
-                value={start}
-                onChange={(e) => setStart(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                type="number"
+                min={1}
+                value={durationValue}
+                onChange={(e) => setDurationValue(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                End <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="datetime-local"
-                value={end}
-                onChange={(e) => setEnd(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              />
+              <select
+                value={durationUnit}
+                onChange={(e) => setDurationUnit(e.target.value as "minutes" | "hours" | "days" | "weeks" | "months")}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="minutes">minute(s)</option>
+                <option value="hours">hour(s)</option>
+                <option value="days">day(s)</option>
+                <option value="weeks">week(s)</option>
+                <option value="months">month(s)</option>
+              </select>
             </div>
           </div>
           <div>
@@ -230,10 +251,26 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onAddMore }: {
   onAddMore: (items: CalendarEvent[]) => void;
 }) {
   const isSeries = event.seriesId !== null;
+  const diffMinutes = Math.round((new Date(event.endTime).getTime() - new Date(event.startTime).getTime()) / 60000);
+  const diffDays = diffMinutes / (60 * 24);
+  const initialUnit: "minutes" | "hours" | "days" | "weeks" | "months" =
+    Number.isInteger(diffDays) && diffDays % 30 === 0 ? "months"
+    : Number.isInteger(diffDays) && diffDays % 7 === 0 ? "weeks"
+    : Number.isInteger(diffDays) ? "days"
+    : diffMinutes % 60 === 0 ? "hours"
+    : "minutes";
+  const initialDuration =
+    initialUnit === "months" ? diffDays / 30
+    : initialUnit === "weeks" ? diffDays / 7
+    : initialUnit === "days" ? diffDays
+    : initialUnit === "hours" ? diffMinutes / 60
+    : diffMinutes;
+
   const [title, setTitle] = useState(event.title);
   const [description, setDescription] = useState(event.description ?? "");
   const [start, setStart] = useState(toDateTimeLocal(new Date(event.startTime)));
-  const [end, setEnd] = useState(toDateTimeLocal(new Date(event.endTime)));
+  const [durationValue, setDurationValue] = useState(initialDuration);
+  const [durationUnit, setDurationUnit] = useState<"minutes" | "hours" | "days" | "weeks" | "months">(initialUnit);
   const [addMore, setAddMore] = useState(false);
   const [repeatCount, setRepeatCount] = useState(1);
   const [repeatInterval, setRepeatInterval] = useState(event.repeatInterval ?? 1);
@@ -246,10 +283,19 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onAddMore }: {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) { setError("Title is required."); return; }
-    if (end <= start) { setError("End must be after start."); return; }
     setSubmitting(true);
     setError("");
     try {
+      const startDate = new Date(start);
+      let endDate: Date;
+      if (durationUnit === "months") {
+        endDate = new Date(startDate);
+        endDate.setMonth(endDate.getMonth() + durationValue);
+      } else {
+        const msMap = { minutes: 60 * 1000, hours: 60 * 60 * 1000, days: 24 * 60 * 60 * 1000, weeks: 7 * 24 * 60 * 60 * 1000 };
+        endDate = new Date(startDate.getTime() + durationValue * msMap[durationUnit as keyof typeof msMap]);
+      }
+      const end = toDateTimeLocal(endDate);
       const updated = await updateEvent(event.id, {
         title: title.trim(),
         description: description.trim(),
@@ -291,8 +337,8 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onAddMore }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md">
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Edit event</h2>
           <button
@@ -324,28 +370,40 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onAddMore }: {
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Start <span className="text-red-500">*</span>
-              </label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Start <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="datetime-local"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+              onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch { /* unsupported */ } }}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+            />
+            <div className="h-72" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration</label>
+            <div className="flex items-center gap-2">
               <input
-                type="datetime-local"
-                value={start}
-                onChange={(e) => setStart(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                type="number"
+                min={1}
+                value={durationValue}
+                onChange={(e) => setDurationValue(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                End <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="datetime-local"
-                value={end}
-                onChange={(e) => setEnd(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              />
+              <select
+                value={durationUnit}
+                onChange={(e) => setDurationUnit(e.target.value as "minutes" | "hours" | "days" | "weeks" | "months")}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="minutes">minute(s)</option>
+                <option value="hours">hour(s)</option>
+                <option value="days">day(s)</option>
+                <option value="weeks">week(s)</option>
+                <option value="months">month(s)</option>
+              </select>
             </div>
           </div>
           {isSeries && (
@@ -724,6 +782,7 @@ function DayView({ viewDate, today, events, tasks, reminders, onEventClick, onTa
     if (scrollRef.current) {
       scrollRef.current.scrollTop = currentHour * CELL_HEIGHT;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
