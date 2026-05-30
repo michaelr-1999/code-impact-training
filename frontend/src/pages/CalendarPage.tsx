@@ -144,7 +144,7 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
               type="datetime-local"
               value={start}
               onChange={(e) => setStart(e.target.value)}
-              onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch {} }}
+              onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch { /* unsupported */ } }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
             />
             <div className="h-72" />
@@ -378,7 +378,7 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onAddMore }: {
               type="datetime-local"
               value={start}
               onChange={(e) => setStart(e.target.value)}
-              onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch {} }}
+              onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch { /* unsupported */ } }}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
             />
             <div className="h-72" />
@@ -782,6 +782,7 @@ function DayView({ viewDate, today, events, tasks, reminders, onEventClick, onTa
     if (scrollRef.current) {
       scrollRef.current.scrollTop = currentHour * CELL_HEIGHT;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
