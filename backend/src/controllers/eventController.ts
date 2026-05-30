@@ -95,6 +95,10 @@ export async function createEventController(req: Request, res: Response) {
   const count = Math.min(Math.max(1, Math.floor(Number(repeatCount) || 1)), 365);
   const interval = Math.max(1, Number(repeatInterval) || 1);
   const unit = repeatUnit ? String(repeatUnit) : "day";
+  const rawDays: unknown = req.body.repeatDays;
+  const repeatDays: number[] = Array.isArray(rawDays)
+    ? rawDays.filter((d): d is number => typeof d === "number" && d >= 0 && d <= 6)
+    : [];
 
   try {
     let resolvedSeriesId: string | undefined;
@@ -138,21 +142,46 @@ export async function createEventController(req: Request, res: Response) {
       duration = baseEnd.getTime() - baseStart.getTime();
       resolvedTitle = title.trim();
       resolvedDescription = description?.trim();
-      if (repeatUnit && count > 1) resolvedSeriesId = randomUUID();
+      if (repeatDays.length > 0 || (repeatUnit && count > 1)) resolvedSeriesId = randomUUID();
     }
 
     const items = [];
-    for (let i = startIndex; i < startIndex + count; i++) {
-      const startTime = repeatUnit ? addInterval(baseStart, interval * i, unit) : baseStart;
-      const endTime = new Date(startTime.getTime() + duration);
-      items.push(await createEvent(req.user.id, {
-        title: resolvedTitle,
-        description: resolvedDescription,
-        startTime,
-        endTime,
-        ...(repeatUnit && { repeatInterval: interval, repeatUnit: unit }),
-        seriesId: resolvedSeriesId,
-      }));
+    if (repeatDays.length > 0) {
+      const cursor = new Date(baseStart);
+      if (startIndex === 1) cursor.setDate(cursor.getDate() + 1);
+      const limitMs = cursor.getTime() + (count * 7 + 7) * 24 * 60 * 60 * 1000;
+      let generated = 0;
+      while (generated < count && cursor.getTime() <= limitMs) {
+        if (repeatDays.includes(cursor.getDay())) {
+          const startTime = new Date(cursor);
+          startTime.setHours(baseStart.getHours(), baseStart.getMinutes(), 0, 0);
+          const endTime = new Date(startTime.getTime() + duration);
+          items.push(await createEvent(req.user.id, {
+            title: resolvedTitle,
+            description: resolvedDescription,
+            startTime,
+            endTime,
+            repeatInterval: 1,
+            repeatUnit: "week",
+            seriesId: resolvedSeriesId,
+          }));
+          generated++;
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    } else {
+      for (let i = startIndex; i < startIndex + count; i++) {
+        const startTime = repeatUnit ? addInterval(baseStart, interval * i, unit) : baseStart;
+        const endTime = new Date(startTime.getTime() + duration);
+        items.push(await createEvent(req.user.id, {
+          title: resolvedTitle,
+          description: resolvedDescription,
+          startTime,
+          endTime,
+          ...(repeatUnit && { repeatInterval: interval, repeatUnit: unit }),
+          seriesId: resolvedSeriesId,
+        }));
+      }
     }
     res.status(201).json({ success: true, data: items });
   } catch (err) {

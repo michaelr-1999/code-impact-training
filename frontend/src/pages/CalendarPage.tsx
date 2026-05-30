@@ -50,7 +50,7 @@ function startOfWeek(date: Date) {
 function CreateEventModal({ defaultDate, onClose, onSubmit }: {
   defaultDate: Date;
   onClose: () => void;
-  onSubmit: (data: { title: string; description: string; start: string; end: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number }) => Promise<void>;
+  onSubmit: (data: { title: string; description: string; start: string; end: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number; repeatDays?: number[] }) => Promise<void>;
 }) {
   const defaultStart = new Date(defaultDate);
   defaultStart.setHours(9, 0, 0, 0);
@@ -64,6 +64,7 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
   const [repeatCount, setRepeatCount] = useState(2);
   const [repeatInterval, setRepeatInterval] = useState(1);
   const [repeatUnit, setRepeatUnit] = useState("day");
+  const [repeatDays, setRepeatDays] = useState<number[]>([]);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -90,6 +91,7 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
         start,
         end,
         ...(repeats && { repeatCount, repeatInterval, repeatUnit }),
+        ...(repeats && repeatDays.length > 0 && { repeatDays }),
       });
       onClose();
     } catch (err) {
@@ -145,7 +147,7 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
               value={start}
               onChange={(e) => setStart(e.target.value)}
               onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch { /* unsupported */ } }}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+              className="w-full px-3 py-2 border border-blue-300 dark:border-blue-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-blue-50/60 dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
             />
             <div className="h-72" />
           </div>
@@ -195,26 +197,49 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
                     className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
                   />
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600 dark:text-gray-400 w-20">Repeat every</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={repeatInterval}
-                    onChange={(e) => setRepeatInterval(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
-                  />
-                  <select
-                    value={repeatUnit}
-                    onChange={(e) => setRepeatUnit(e.target.value)}
-                    className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="day">day(s)</option>
-                    <option value="week">week(s)</option>
-                    <option value="month">month(s)</option>
-                    <option value="year">year(s)</option>
-                  </select>
+                <div>
+                  <div className="flex flex-wrap gap-1">
+                    {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((label, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setRepeatDays((prev) => prev.includes(i) ? prev.filter((d) => d !== i) : [...prev, i].sort((a, b) => a - b))}
+                        className={`w-9 h-9 rounded-full text-xs font-medium transition-colors ${repeatDays.includes(i) ? "bg-blue-600 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex gap-3 mt-1.5">
+                    <button type="button" onClick={() => setRepeatDays([1, 2, 3, 4, 5])} className="text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400">Weekdays</button>
+                    <button type="button" onClick={() => setRepeatDays([0, 6])} className="text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400">Weekends</button>
+                    {repeatDays.length > 0 && (
+                      <button type="button" onClick={() => setRepeatDays([])} className="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400">Clear</button>
+                    )}
+                  </div>
                 </div>
+                {repeatDays.length === 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 w-20">Repeat every</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={repeatInterval}
+                      onChange={(e) => setRepeatInterval(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
+                    />
+                    <select
+                      value={repeatUnit}
+                      onChange={(e) => setRepeatUnit(e.target.value)}
+                      className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    >
+                      <option value="day">day(s)</option>
+                      <option value="week">week(s)</option>
+                      <option value="month">month(s)</option>
+                      <option value="year">year(s)</option>
+                    </select>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -275,6 +300,7 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onAddMore }: {
   const [repeatCount, setRepeatCount] = useState(1);
   const [repeatInterval, setRepeatInterval] = useState(event.repeatInterval ?? 1);
   const [repeatUnit, setRepeatUnit] = useState(event.repeatUnit ?? "day");
+  const [repeatDays, setRepeatDays] = useState<number[]>([]);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -309,6 +335,7 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onAddMore }: {
           repeatCount,
           repeatInterval,
           repeatUnit,
+          ...(repeatDays.length > 0 && { repeatDays }),
         });
         onAddMore(items);
       }
@@ -379,7 +406,7 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onAddMore }: {
               value={start}
               onChange={(e) => setStart(e.target.value)}
               onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch { /* unsupported */ } }}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
+              className="w-full px-3 py-2 border border-blue-300 dark:border-blue-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-blue-50/60 dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
             />
             <div className="h-72" />
           </div>
@@ -430,26 +457,49 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onAddMore }: {
                       className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
                     />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600 dark:text-gray-400 w-20">Repeat every</span>
-                    <input
-                      type="number"
-                      min={1}
-                      value={repeatInterval}
-                      onChange={(e) => setRepeatInterval(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
-                    />
-                    <select
-                      value={repeatUnit}
-                      onChange={(e) => setRepeatUnit(e.target.value)}
-                      className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    >
-                      <option value="day">day(s)</option>
-                      <option value="week">week(s)</option>
-                      <option value="month">month(s)</option>
-                      <option value="year">year(s)</option>
-                    </select>
+                  <div>
+                    <div className="flex flex-wrap gap-1">
+                      {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((label, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setRepeatDays((prev) => prev.includes(i) ? prev.filter((d) => d !== i) : [...prev, i].sort((a, b) => a - b))}
+                          className={`w-9 h-9 rounded-full text-xs font-medium transition-colors ${repeatDays.includes(i) ? "bg-blue-600 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"}`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex gap-3 mt-1.5">
+                      <button type="button" onClick={() => setRepeatDays([1, 2, 3, 4, 5])} className="text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400">Weekdays</button>
+                      <button type="button" onClick={() => setRepeatDays([0, 6])} className="text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400">Weekends</button>
+                      {repeatDays.length > 0 && (
+                        <button type="button" onClick={() => setRepeatDays([])} className="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400">Clear</button>
+                      )}
+                    </div>
                   </div>
+                  {repeatDays.length === 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 w-20">Repeat every</span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={repeatInterval}
+                        onChange={(e) => setRepeatInterval(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
+                      />
+                      <select
+                        value={repeatUnit}
+                        onChange={(e) => setRepeatUnit(e.target.value)}
+                        className="px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      >
+                        <option value="day">day(s)</option>
+                        <option value="week">week(s)</option>
+                        <option value="month">month(s)</option>
+                        <option value="year">year(s)</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -961,7 +1011,7 @@ export default function CalendarPage() {
       .catch(() => {});
   }, [view, viewDate]);
 
-  async function handleSubmit(data: { title: string; description: string; start: string; end: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number }) {
+  async function handleSubmit(data: { title: string; description: string; start: string; end: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number; repeatDays?: number[] }) {
     const created = await createEvent(data);
     setEvents((prev) => [...prev, ...created]);
   }
