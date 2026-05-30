@@ -1,3 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  input[type="datetime-local"] {
+    color-scheme: light;
+  }
+  .dark input[type="datetime-local"] {
+    color-scheme: dark;
+  }
+}

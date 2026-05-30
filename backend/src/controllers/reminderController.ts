@@ -38,6 +38,10 @@ export async function createReminderController(req: Request, res: Response) {
   const count = Math.min(Math.max(1, Math.floor(Number(repeatCount) || 1)), 365);
   const interval = Math.max(1, Number(repeatInterval) || 1);
   const unit = repeatUnit ? String(repeatUnit) : "day";
+  const rawDays: unknown = req.body.repeatDays;
+  const repeatDays: number[] = Array.isArray(rawDays)
+    ? rawDays.filter((d): d is number => typeof d === "number" && d >= 0 && d <= 6)
+    : [];
   try {
     let resolvedSeriesId: string | undefined;
     let baseTime: Date | undefined;
@@ -50,20 +54,42 @@ export async function createReminderController(req: Request, res: Response) {
       startIndex = 1;
     } else {
       baseTime = scheduledTime ? new Date(scheduledTime) : undefined;
-      if (repeatUnit && count > 1) resolvedSeriesId = randomUUID();
+      if (repeatDays.length > 0 || (repeatUnit && count > 1)) resolvedSeriesId = randomUUID();
     }
 
     const items = [];
-    for (let i = startIndex; i < startIndex + count; i++) {
-      const time = baseTime && repeatUnit ? addInterval(baseTime, interval * i, unit) : baseTime;
-      items.push(await createReminder(req.user.id, {
-        title: title.trim(),
-        scheduledTime: time,
-        isDone: isDone === true,
-        categoryId: categoryId ? String(categoryId) : undefined,
-        ...(repeatUnit && { repeatInterval: interval, repeatUnit: unit }),
-        seriesId: resolvedSeriesId,
-      }));
+    if (repeatDays.length > 0 && baseTime) {
+      const cursor = new Date(baseTime);
+      if (startIndex === 1) cursor.setDate(cursor.getDate() + 1);
+      const limitMs = cursor.getTime() + (count * 7 + 7) * 24 * 60 * 60 * 1000;
+      let generated = 0;
+      while (generated < count && cursor.getTime() <= limitMs) {
+        if (repeatDays.includes(cursor.getDay())) {
+          items.push(await createReminder(req.user.id, {
+            title: title.trim(),
+            scheduledTime: new Date(cursor),
+            isDone: isDone === true,
+            categoryId: categoryId ? String(categoryId) : undefined,
+            repeatInterval: 1,
+            repeatUnit: "week",
+            seriesId: resolvedSeriesId,
+          }));
+          generated++;
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    } else {
+      for (let i = startIndex; i < startIndex + count; i++) {
+        const time = baseTime && repeatUnit ? addInterval(baseTime, interval * i, unit) : baseTime;
+        items.push(await createReminder(req.user.id, {
+          title: title.trim(),
+          scheduledTime: time,
+          isDone: isDone === true,
+          categoryId: categoryId ? String(categoryId) : undefined,
+          ...(repeatUnit && { repeatInterval: interval, repeatUnit: unit }),
+          seriesId: resolvedSeriesId,
+        }));
+      }
     }
     res.status(201).json({ success: true, data: items });
   } catch (err) { errResponse(res, err); }

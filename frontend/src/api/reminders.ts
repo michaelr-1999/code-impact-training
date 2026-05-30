@@ -44,6 +44,7 @@ export async function createReminder(data: {
   repeatUnit?: string;
   repeatCount?: number;
   seriesId?: string;
+  repeatDays?: number[];
 }): Promise<ApiReminder[]> {
   const res = await apiFetch("/api/reminders", {
     method: "POST",
