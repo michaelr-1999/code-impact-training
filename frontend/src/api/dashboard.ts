@@ -27,14 +27,18 @@ export interface DashboardData {
 }
 
 export async function getDashboardToday(): Promise<DashboardData> {
-  const res = await apiFetch("/api/dashboard/today");
+  const tz = new Date().getTimezoneOffset();
+  const res = await apiFetch(`/api/dashboard/today?timezoneOffset=${tz}`);
   const json = await res.json();
   if (!res.ok) throw new Error(json.error ?? "Failed to load dashboard");
   return json.data as DashboardData;
 }
 
 export async function postAiSummary(): Promise<string> {
-  const res = await apiFetch("/api/dashboard/ai-summary", { method: "POST" });
+  const res = await apiFetch("/api/dashboard/ai-summary", {
+    method: "POST",
+    body: JSON.stringify({ timezoneOffset: new Date().getTimezoneOffset() }),
+  });
   const json = await res.json();
   if (!res.ok) throw new Error(json.error ?? "Failed to generate summary");
   return json.data.summary as string;
