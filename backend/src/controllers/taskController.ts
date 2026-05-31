@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { randomUUID } from "crypto";
-import { getTasks, createTask, updateTask, deleteTask, getSeriesLastTask } from "../services/taskService";
+import { getTasks, createTask, updateTask, deleteTask, getSeriesLastTask, deleteTaskSeries } from "../services/taskService";
 import { AppError } from "../lib/errors";
 
 function addInterval(date: Date, interval: number, unit: string): Date {
@@ -145,6 +145,17 @@ export async function deleteTaskController(req: Request, res: Response) {
   try {
     const result = await deleteTask(req.params.id, req.user.id);
     if (!result) { res.status(404).json({ success: false, error: "Task not found" }); return; }
+    res.status(204).send();
+  } catch (err) {
+    const status = err instanceof AppError ? err.statusCode : 500;
+    const message = err instanceof Error ? err.message : "Internal server error";
+    res.status(status).json({ success: false, error: message });
+  }
+}
+
+export async function deleteTaskSeriesController(req: Request, res: Response) {
+  try {
+    await deleteTaskSeries(req.params.seriesId, req.user.id);
     res.status(204).send();
   } catch (err) {
     const status = err instanceof AppError ? err.statusCode : 500;

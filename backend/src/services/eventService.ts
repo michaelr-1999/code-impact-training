@@ -59,3 +59,7 @@ export async function getSeriesLastEvent(seriesId: string, userId: string) {
     orderBy: { startTime: "desc" },
   });
 }
+
+export async function deleteEventSeries(seriesId: string, userId: string) {
+  return prisma.event.deleteMany({ where: { seriesId, userId } });
+}

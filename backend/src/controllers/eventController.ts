@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { randomUUID } from "crypto";
-import { createEvent, updateEvent, deleteEvent, getEvents, getSeriesLastEvent } from "../services/eventService";
+import { createEvent, updateEvent, deleteEvent, getEvents, getSeriesLastEvent, deleteEventSeries } from "../services/eventService";
 import { AppError } from "../lib/errors";
 
 function addInterval(date: Date, interval: number, unit: string): Date {
@@ -37,6 +37,17 @@ export async function deleteEventController(req: Request, res: Response) {
       res.status(404).json({ success: false, error: "Event not found" });
       return;
     }
+    const status = err instanceof AppError ? err.statusCode : 500;
+    const message = err instanceof Error ? err.message : "Internal server error";
+    res.status(status).json({ success: false, error: message });
+  }
+}
+
+export async function deleteEventSeriesController(req: Request, res: Response) {
+  try {
+    await deleteEventSeries(req.params.seriesId, req.user.id);
+    res.status(204).send();
+  } catch (err) {
     const status = err instanceof AppError ? err.statusCode : 500;
     const message = err instanceof Error ? err.message : "Internal server error";
     res.status(status).json({ success: false, error: message });
