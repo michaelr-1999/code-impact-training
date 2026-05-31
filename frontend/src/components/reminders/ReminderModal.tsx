@@ -79,7 +79,7 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
             repeatCount,
             repeatInterval,
             repeatUnit,
-            ...(repeatDays.length > 0 && { repeatDays }),
+            ...(repeatDays.length > 0 && { repeatDays, timezoneOffset: new Date().getTimezoneOffset() }),
           });
           items.forEach((item) => onSave(item));
         }
@@ -89,7 +89,7 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
           ...(scheduledTime && { scheduledTime: new Date(scheduledTime).toISOString() }),
           ...(categoryId && { categoryId }),
           ...(repeats && { repeatCount, repeatInterval, repeatUnit }),
-          ...(repeats && repeatDays.length > 0 && { repeatDays }),
+          ...(repeats && repeatDays.length > 0 && { repeatDays, timezoneOffset: new Date().getTimezoneOffset() }),
         });
         items.forEach((item) => onSave(item));
       }

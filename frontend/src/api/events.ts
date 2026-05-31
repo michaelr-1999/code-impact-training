@@ -57,6 +57,7 @@ export async function createEvent(data: {
   repeatCount?: number;
   seriesId?: string;
   repeatDays?: number[];
+  timezoneOffset?: number;
 }): Promise<ApiEvent[]> {
   const res = await apiFetch("/api/events", {
     method: "POST",

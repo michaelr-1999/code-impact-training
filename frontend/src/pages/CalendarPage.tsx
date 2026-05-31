@@ -51,7 +51,7 @@ function startOfWeek(date: Date) {
 function CreateEventModal({ defaultDate, onClose, onSubmit }: {
   defaultDate: Date;
   onClose: () => void;
-  onSubmit: (data: { title: string; description: string; start: string; end: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number; repeatDays?: number[] }) => Promise<void>;
+  onSubmit: (data: { title: string; description: string; start: string; end: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number; repeatDays?: number[]; timezoneOffset?: number }) => Promise<void>;
 }) {
   const defaultStart = new Date(defaultDate);
   defaultStart.setHours(9, 0, 0, 0);
@@ -98,7 +98,7 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
         start,
         end,
         ...(repeats && { repeatCount, repeatInterval, repeatUnit }),
-        ...(repeats && repeatDays.length > 0 && { repeatDays }),
+        ...(repeats && repeatDays.length > 0 && { repeatDays, timezoneOffset: new Date().getTimezoneOffset() }),
       });
       onClose();
     } catch (err) {
@@ -329,7 +329,7 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onAddMore }: {
           repeatCount,
           repeatInterval,
           repeatUnit,
-          ...(repeatDays.length > 0 && { repeatDays }),
+          ...(repeatDays.length > 0 && { repeatDays, timezoneOffset: new Date().getTimezoneOffset() }),
         });
         onAddMore(items);
       }
@@ -998,7 +998,7 @@ export default function CalendarPage() {
       .catch(() => {});
   }, [view, viewDate]);
 
-  async function handleSubmit(data: { title: string; description: string; start: string; end: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number; repeatDays?: number[] }) {
+  async function handleSubmit(data: { title: string; description: string; start: string; end: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number; repeatDays?: number[]; timezoneOffset?: number }) {
     const created = await createEvent(data);
     setEvents((prev) => [...prev, ...created]);
   }
