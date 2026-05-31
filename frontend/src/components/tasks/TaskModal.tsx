@@ -75,7 +75,7 @@ export function TaskModal({ task, onClose, onSave, onDelete }: Props) {
               repeatCount,
               repeatInterval,
               repeatUnit,
-              ...(repeatDays.length > 0 && { repeatDays }),
+              ...(repeatDays.length > 0 && { repeatDays, timezoneOffset: new Date().getTimezoneOffset() }),
             });
             items.forEach((item) => onSave(item));
           } else if (dueDate) {
@@ -98,7 +98,7 @@ export function TaskModal({ task, onClose, onSave, onDelete }: Props) {
           ...(description.trim() && { description: description.trim() }),
           ...(dueDate && { dueDate: new Date(dueDate).toISOString() }),
           ...(repeats && { repeatCount, repeatInterval, repeatUnit }),
-          ...(repeats && repeatDays.length > 0 && { repeatDays }),
+          ...(repeats && repeatDays.length > 0 && { repeatDays, timezoneOffset: new Date().getTimezoneOffset() }),
         });
         items.forEach((item) => onSave(item));
       }

@@ -9,6 +9,10 @@ function errResponse(res: Response, err: unknown) {
   res.status(status).json({ success: false, error: message });
 }
 
+function getLocalDay(date: Date, tzOffsetMinutes: number): number {
+  return new Date(date.getTime() - tzOffsetMinutes * 60 * 1000).getUTCDay();
+}
+
 function addInterval(date: Date, interval: number, unit: string): Date {
   const d = new Date(date);
   switch (unit) {
@@ -42,6 +46,8 @@ export async function createReminderController(req: Request, res: Response) {
   const repeatDays: number[] = Array.isArray(rawDays)
     ? rawDays.filter((d): d is number => typeof d === "number" && d >= 0 && d <= 6)
     : [];
+  const rawTz: unknown = req.body.timezoneOffset;
+  const tzOffset: number = typeof rawTz === "number" ? rawTz : 0;
   try {
     let resolvedSeriesId: string | undefined;
     let baseTime: Date | undefined;
@@ -64,7 +70,7 @@ export async function createReminderController(req: Request, res: Response) {
       const limitMs = cursor.getTime() + (count * 7 + 7) * 24 * 60 * 60 * 1000;
       let generated = 0;
       while (generated < count && cursor.getTime() <= limitMs) {
-        if (repeatDays.includes(cursor.getDay())) {
+        if (repeatDays.includes(getLocalDay(cursor, tzOffset))) {
           items.push(await createReminder(req.user.id, {
             title: title.trim(),
             scheduledTime: new Date(cursor),

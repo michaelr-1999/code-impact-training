@@ -3,6 +3,10 @@ import { randomUUID } from "crypto";
 import { createEvent, updateEvent, deleteEvent, getEvents, getSeriesLastEvent } from "../services/eventService";
 import { AppError } from "../lib/errors";
 
+function getLocalDay(date: Date, tzOffsetMinutes: number): number {
+  return new Date(date.getTime() - tzOffsetMinutes * 60 * 1000).getUTCDay();
+}
+
 function addInterval(date: Date, interval: number, unit: string): Date {
   const d = new Date(date);
   switch (unit) {
@@ -99,6 +103,8 @@ export async function createEventController(req: Request, res: Response) {
   const repeatDays: number[] = Array.isArray(rawDays)
     ? rawDays.filter((d): d is number => typeof d === "number" && d >= 0 && d <= 6)
     : [];
+  const rawTz: unknown = req.body.timezoneOffset;
+  const tzOffset: number = typeof rawTz === "number" ? rawTz : 0;
 
   try {
     let resolvedSeriesId: string | undefined;
@@ -152,7 +158,7 @@ export async function createEventController(req: Request, res: Response) {
       const limitMs = cursor.getTime() + (count * 7 + 7) * 24 * 60 * 60 * 1000;
       let generated = 0;
       while (generated < count && cursor.getTime() <= limitMs) {
-        if (repeatDays.includes(cursor.getDay())) {
+        if (repeatDays.includes(getLocalDay(cursor, tzOffset))) {
           const startTime = new Date(cursor);
           startTime.setHours(baseStart.getHours(), baseStart.getMinutes(), 0, 0);
           const endTime = new Date(startTime.getTime() + duration);
