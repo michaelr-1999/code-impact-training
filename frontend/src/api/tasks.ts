@@ -68,3 +68,11 @@ export async function deleteTask(id: string): Promise<void> {
     throw new Error(json.error ?? "Failed to delete task");
   }
 }
+
+export async function deleteTaskSeries(seriesId: string): Promise<void> {
+  const res = await apiFetch(`/api/tasks/series/${seriesId}`, { method: "DELETE" });
+  if (!res.ok) {
+    const json = await res.json();
+    throw new Error(json.error ?? "Failed to delete series");
+  }
+}

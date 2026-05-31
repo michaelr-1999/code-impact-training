@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { createEvent, updateEvent, deleteEvent, type ApiEvent } from "../api/events";
+import { createEvent, updateEvent, deleteEvent, deleteEventSeries, type ApiEvent } from "../api/events";
 import { DateTimePicker } from "../components/DateTimePicker";
 import type { ApiTask } from "../api/tasks";
 import type { ApiReminder } from "../api/reminders";
@@ -268,11 +268,12 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
 
 // ── Event detail / edit modal ─────────────────────────────────────────────────
 
-function EventDetailModal({ event, onClose, onSave, onDelete, onAddMore }: {
+function EventDetailModal({ event, onClose, onSave, onDelete, onDeleteSeries, onAddMore }: {
   event: CalendarEvent;
   onClose: () => void;
   onSave: (updated: CalendarEvent) => void;
   onDelete: (id: string) => void;
+  onDeleteSeries?: (seriesId: string) => void;
   onAddMore: (items: CalendarEvent[]) => void;
 }) {
   const isSeries = event.seriesId !== null;
@@ -350,6 +351,22 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onAddMore }: {
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete event");
+      setConfirmingDelete(false);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function handleDeleteSeries() {
+    if (!event.seriesId) return;
+    setDeleting(true);
+    setError("");
+    try {
+      await deleteEventSeries(event.seriesId);
+      onDeleteSeries?.(event.seriesId);
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete series");
       setConfirmingDelete(false);
     } finally {
       setDeleting(false);
@@ -494,7 +511,7 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onAddMore }: {
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex items-center justify-between pt-2">
             {confirmingDelete ? (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Delete this event?</span>
                 <button
                   type="button"
@@ -502,8 +519,18 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onAddMore }: {
                   disabled={deleting}
                   className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
                 >
-                  {deleting ? "Deleting…" : "Yes, delete"}
+                  {deleting ? "Deleting…" : "Just this one"}
                 </button>
+                {isSeries && (
+                  <button
+                    type="button"
+                    onClick={handleDeleteSeries}
+                    disabled={deleting}
+                    className="px-3 py-1.5 text-sm font-medium text-white bg-red-700 rounded-lg hover:bg-red-800 transition-colors disabled:opacity-50"
+                  >
+                    All in series
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setConfirmingDelete(false)}
@@ -1011,6 +1038,10 @@ export default function CalendarPage() {
     setEvents((prev) => prev.filter((e) => e.id !== id));
   }
 
+  function handleDeleteSeries(seriesId: string) {
+    setEvents((prev) => prev.filter((e) => e.seriesId !== seriesId));
+  }
+
   function handleAddMore(items: CalendarEvent[]) {
     setEvents((prev) => [...prev, ...items]);
   }
@@ -1094,6 +1125,7 @@ export default function CalendarPage() {
           onClose={() => setSelectedEvent(null)}
           onSave={handleSave}
           onDelete={handleDelete}
+          onDeleteSeries={handleDeleteSeries}
           onAddMore={handleAddMore}
         />
       )}

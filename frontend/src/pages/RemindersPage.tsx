@@ -49,6 +49,10 @@ export default function RemindersPage() {
     setReminders((prev) => prev.filter((r) => r.id !== id));
   }
 
+  function handleDeleteSeries(seriesId: string) {
+    setReminders((prev) => prev.filter((r) => r.seriesId !== seriesId));
+  }
+
   async function handleToggle(reminder: ApiReminder) {
     const wasDone = reminder.isDone;
     setReminders((prev) =>
@@ -133,6 +137,7 @@ export default function RemindersPage() {
           onClose={() => setModalOpen(false)}
           onSave={handleSave}
           onDelete={handleDelete}
+          onDeleteSeries={handleDeleteSeries}
           onCategoriesChange={setCategories}
         />
       )}

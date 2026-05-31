@@ -50,6 +50,10 @@ export default function TasksPage() {
     setTasks(prev => prev.filter(t => t.id !== id));
   }
 
+  function handleDeleteSeries(seriesId: string) {
+    setTasks(prev => prev.filter(t => t.seriesId !== seriesId));
+  }
+
   async function handleToggle(task: ApiTask) {
     const wasDone = !!task.completedAt;
     setTasks(prev =>
@@ -102,6 +106,7 @@ export default function TasksPage() {
           onClose={closeModal}
           onSave={handleSave}
           onDelete={handleDelete}
+          onDeleteSeries={handleDeleteSeries}
         />
       )}
     </div>

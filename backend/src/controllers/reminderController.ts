@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { randomUUID } from "crypto";
-import { getReminders, createReminder, updateReminder, deleteReminder, getSeriesLastReminder } from "../services/reminderService";
+import { getReminders, createReminder, updateReminder, deleteReminder, getSeriesLastReminder, deleteReminderSeries } from "../services/reminderService";
 import { AppError } from "../lib/errors";
 
 function errResponse(res: Response, err: unknown) {
@@ -138,6 +138,13 @@ export async function deleteReminderController(req: Request, res: Response) {
   try {
     const result = await deleteReminder(req.params.id, req.user.id);
     if (!result) { res.status(404).json({ success: false, error: "Reminder not found" }); return; }
+    res.status(204).send();
+  } catch (err) { errResponse(res, err); }
+}
+
+export async function deleteReminderSeriesController(req: Request, res: Response) {
+  try {
+    await deleteReminderSeries(req.params.seriesId, req.user.id);
     res.status(204).send();
   } catch (err) { errResponse(res, err); }
 }

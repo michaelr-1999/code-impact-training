@@ -62,3 +62,7 @@ export async function deleteReminder(id: string, userId: string) {
   await prisma.reminder.delete({ where: { id } });
   return true;
 }
+
+export async function deleteReminderSeries(seriesId: string, userId: string) {
+  return prisma.reminder.deleteMany({ where: { seriesId, userId } });
+}

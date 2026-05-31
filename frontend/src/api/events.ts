@@ -26,6 +26,14 @@ export async function deleteEvent(id: string): Promise<void> {
   }
 }
 
+export async function deleteEventSeries(seriesId: string): Promise<void> {
+  const res = await apiFetch(`/api/events/series/${seriesId}`, { method: "DELETE" });
+  if (!res.ok) {
+    const json = await res.json();
+    throw new Error(json.error ?? "Failed to delete series");
+  }
+}
+
 export async function updateEvent(id: string, data: {
   title: string;
   description: string;

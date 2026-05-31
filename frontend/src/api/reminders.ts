@@ -77,6 +77,14 @@ export async function deleteReminder(id: string): Promise<void> {
   }
 }
 
+export async function deleteReminderSeries(seriesId: string): Promise<void> {
+  const res = await apiFetch(`/api/reminders/series/${seriesId}`, { method: "DELETE" });
+  if (!res.ok) {
+    const json = await res.json();
+    throw new Error(json.error ?? "Failed to delete series");
+  }
+}
+
 export async function markReminderDone(id: string): Promise<ApiReminder> {
   const res = await apiFetch(`/api/reminders/${id}/done`, { method: "PATCH" });
   const json = await res.json();

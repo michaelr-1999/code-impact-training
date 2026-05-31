@@ -62,3 +62,8 @@ export async function deleteTask(id: string, userId: string) {
 export function isOverdue(dueDate: Date): boolean {
   return dueDate < new Date();
 }
+
+
+export async function deleteTaskSeries(seriesId: string, userId: string) {
+  return prisma.task.deleteMany({ where: { seriesId, userId } });
+}

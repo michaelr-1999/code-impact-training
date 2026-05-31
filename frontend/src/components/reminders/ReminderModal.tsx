@@ -3,6 +3,7 @@ import {
   createReminder,
   updateReminder,
   deleteReminder,
+  deleteReminderSeries,
   createCategory,
   deleteCategory,
   type ApiReminder,
@@ -23,10 +24,11 @@ interface Props {
   onClose: () => void;
   onSave: (reminder: ApiReminder) => void;
   onDelete: (id: string) => void;
+  onDeleteSeries?: (seriesId: string) => void;
   onCategoriesChange: (categories: ApiReminderCategory[]) => void;
 }
 
-export function ReminderModal({ reminder, categories, onClose, onSave, onDelete, onCategoriesChange }: Props) {
+export function ReminderModal({ reminder, categories, onClose, onSave, onDelete, onDeleteSeries, onCategoriesChange }: Props) {
   const isEdit = reminder !== null;
   const isSeries = isEdit && reminder.seriesId !== null;
   const [title, setTitle] = useState(reminder?.title ?? "");
@@ -111,6 +113,22 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete reminder");
+      setConfirmingDelete(false);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function handleDeleteSeries() {
+    if (!reminder?.seriesId) return;
+    setDeleting(true);
+    setError("");
+    try {
+      await deleteReminderSeries(reminder.seriesId);
+      onDeleteSeries?.(reminder.seriesId);
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete series");
       setConfirmingDelete(false);
     } finally {
       setDeleting(false);
@@ -317,7 +335,7 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
           <div className="flex items-center justify-between pt-2">
             {isEdit ? (
               confirmingDelete ? (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Delete this reminder?</span>
                   <button
                     type="button"
@@ -325,8 +343,18 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
                     disabled={deleting}
                     className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
                   >
-                    {deleting ? "Deleting…" : "Yes, delete"}
+                    {deleting ? "Deleting…" : "Just this one"}
                   </button>
+                  {isSeries && (
+                    <button
+                      type="button"
+                      onClick={handleDeleteSeries}
+                      disabled={deleting}
+                      className="px-3 py-1.5 text-sm font-medium text-white bg-red-700 rounded-lg hover:bg-red-800 transition-colors disabled:opacity-50"
+                    >
+                      All in series
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setConfirmingDelete(false)}

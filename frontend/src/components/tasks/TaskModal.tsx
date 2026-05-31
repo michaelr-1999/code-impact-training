@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from "react";
-import { createTask, updateTask, deleteTask, type ApiTask } from "../../api/tasks";
+import { createTask, updateTask, deleteTask, deleteTaskSeries, type ApiTask } from "../../api/tasks";
 import { DateTimePicker } from "../DateTimePicker";
 
 function toDateTimeLocal(date: Date) {
@@ -24,9 +24,10 @@ interface Props {
   onClose: () => void;
   onSave: (task: ApiTask) => void;
   onDelete: (id: string) => void;
+  onDeleteSeries?: (seriesId: string) => void;
 }
 
-export function TaskModal({ task, onClose, onSave, onDelete }: Props) {
+export function TaskModal({ task, onClose, onSave, onDelete, onDeleteSeries }: Props) {
   const isEdit = task !== null;
   const isSeries = isEdit && task.seriesId !== null;
   const [title, setTitle] = useState(task?.title ?? "");
@@ -120,6 +121,22 @@ export function TaskModal({ task, onClose, onSave, onDelete }: Props) {
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete task");
+      setConfirmingDelete(false);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function handleDeleteSeries() {
+    if (!task?.seriesId) return;
+    setDeleting(true);
+    setError("");
+    try {
+      await deleteTaskSeries(task.seriesId);
+      onDeleteSeries?.(task.seriesId);
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete series");
       setConfirmingDelete(false);
     } finally {
       setDeleting(false);
@@ -246,7 +263,7 @@ export function TaskModal({ task, onClose, onSave, onDelete }: Props) {
           <div className="flex items-center justify-between pt-2">
             {isEdit ? (
               confirmingDelete ? (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Delete this task?</span>
                   <button
                     type="button"
@@ -254,8 +271,18 @@ export function TaskModal({ task, onClose, onSave, onDelete }: Props) {
                     disabled={deleting}
                     className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
                   >
-                    {deleting ? "Deleting…" : "Yes, delete"}
+                    {deleting ? "Deleting…" : "Just this one"}
                   </button>
+                  {isSeries && (
+                    <button
+                      type="button"
+                      onClick={handleDeleteSeries}
+                      disabled={deleting}
+                      className="px-3 py-1.5 text-sm font-medium text-white bg-red-700 rounded-lg hover:bg-red-800 transition-colors disabled:opacity-50"
+                    >
+                      All in series
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setConfirmingDelete(false)}
