@@ -1,16 +1,42 @@
 import Anthropic from "@anthropic-ai/sdk";
 import prisma from "../lib/prisma";
 
-function getTodayRange(): { startOfDay: Date; endOfDay: Date } {
-  // "Today" is computed in UTC so the result is consistent regardless of server timezone.
-  const now = new Date();
-  const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const endOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+function getTodayRange(tzOffsetMinutes: number): { startOfDay: Date; endOfDay: Date } {
+  // Shift "now" into the user's local time so getUTC* gives the local date fields
+  const localNow = new Date(Date.now() - tzOffsetMinutes * 60 * 1000);
+  const y = localNow.getUTCFullYear();
+  const mo = localNow.getUTCMonth();
+  const d = localNow.getUTCDate();
+  // Midnight local = UTC midnight + tzOffsetMinutes (offset is positive west of UTC)
+  const startOfDay = new Date(Date.UTC(y, mo, d) + tzOffsetMinutes * 60 * 1000);
+  const endOfDay = new Date(Date.UTC(y, mo, d, 23, 59, 59, 999) + tzOffsetMinutes * 60 * 1000);
   return { startOfDay, endOfDay };
 }
 
-export async function getDashboardToday(userId: string) {
-  const { startOfDay, endOfDay } = getTodayRange();
+function formatTimestamp(d: Date | string, tzOffsetMinutes: number): string {
+  const local = new Date(new Date(d).getTime() - tzOffsetMinutes * 60 * 1000);
+  const h = local.getUTCHours();
+  const m = local.getUTCMinutes();
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
+function formatDateLabel(d: Date | string, tzOffsetMinutes: number): string {
+  const local = new Date(new Date(d).getTime() - tzOffsetMinutes * 60 * 1000);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${months[local.getUTCMonth()]} ${local.getUTCDate()}`;
+}
+
+function formatLocalDate(tzOffsetMinutes: number): string {
+  const local = new Date(Date.now() - tzOffsetMinutes * 60 * 1000);
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  return `${days[local.getUTCDay()]}, ${months[local.getUTCMonth()]} ${local.getUTCDate()}, ${local.getUTCFullYear()}`;
+}
+
+export async function getDashboardToday(userId: string, tzOffsetMinutes = 0) {
+  const { startOfDay, endOfDay } = getTodayRange(tzOffsetMinutes);
 
   const [events, tasks, reminders] = await Promise.all([
     prisma.event.findMany({
@@ -40,36 +66,23 @@ export async function getDashboardToday(userId: string) {
   return { events, tasks, reminders };
 }
 
-function formatTimestamp(d: Date | string): string {
-  return new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
+export async function getAiSummary(userId: string, tzOffsetMinutes = 0): Promise<string> {
+  const { events, tasks, reminders } = await getDashboardToday(userId, tzOffsetMinutes);
 
-function formatDateLabel(d: Date | string): string {
-  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-export async function getAiSummary(userId: string): Promise<string> {
-  const { events, tasks, reminders } = await getDashboardToday(userId);
-
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const today = formatLocalDate(tzOffsetMinutes);
 
   const eventsText =
     events.length === 0
       ? "No events today."
       : events
-          .map((e) => `- ${e.title} (${formatTimestamp(e.startTime)} – ${formatTimestamp(e.endTime)})`)
+          .map((e) => `- ${e.title} (${formatTimestamp(e.startTime, tzOffsetMinutes)} – ${formatTimestamp(e.endTime, tzOffsetMinutes)})`)
           .join("\n");
 
   const tasksText =
     tasks.length === 0
       ? "No tasks due today."
       : tasks
-          .map((t) => `- ${t.title}${t.dueDate ? ` (due ${formatDateLabel(t.dueDate)})` : ""}`)
+          .map((t) => `- ${t.title}${t.dueDate ? ` (due ${formatDateLabel(t.dueDate, tzOffsetMinutes)})` : ""}`)
           .join("\n");
 
   const remindersText =
@@ -78,7 +91,7 @@ export async function getAiSummary(userId: string): Promise<string> {
       : reminders
           .map(
             (r) =>
-              `- ${r.title}${r.scheduledTime ? ` at ${formatTimestamp(r.scheduledTime)}` : ""}${(r as { category?: { name: string } | null }).category ? ` [${(r as { category: { name: string } }).category.name}]` : ""}`
+              `- ${r.title}${r.scheduledTime ? ` at ${formatTimestamp(r.scheduledTime, tzOffsetMinutes)}` : ""}${(r as { category?: { name: string } | null }).category ? ` [${(r as { category: { name: string } }).category.name}]` : ""}`
           )
           .join("\n");
 
