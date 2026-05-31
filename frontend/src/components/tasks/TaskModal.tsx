@@ -1,10 +1,12 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { createTask, updateTask, deleteTask, deleteTaskSeries, type ApiTask } from "../../api/tasks";
+import { DateTimePicker } from "../DateTimePicker";
 
 function toDateTimeLocal(date: Date) {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
+
 
 function addInterval(date: Date, interval: number, unit: string): Date {
   const d = new Date(date);
@@ -74,7 +76,7 @@ export function TaskModal({ task, onClose, onSave, onDelete, onDeleteSeries }: P
               repeatCount,
               repeatInterval,
               repeatUnit,
-              ...(repeatDays.length > 0 && { repeatDays }),
+              ...(repeatDays.length > 0 && { repeatDays, timezoneOffset: new Date().getTimezoneOffset() }),
             });
             items.forEach((item) => onSave(item));
           } else if (dueDate) {
@@ -97,7 +99,7 @@ export function TaskModal({ task, onClose, onSave, onDelete, onDeleteSeries }: P
           ...(description.trim() && { description: description.trim() }),
           ...(dueDate && { dueDate: new Date(dueDate).toISOString() }),
           ...(repeats && { repeatCount, repeatInterval, repeatUnit }),
-          ...(repeats && repeatDays.length > 0 && { repeatDays }),
+          ...(repeats && repeatDays.length > 0 && { repeatDays, timezoneOffset: new Date().getTimezoneOffset() }),
         });
         items.forEach((item) => onSave(item));
       }
@@ -182,14 +184,7 @@ export function TaskModal({ task, onClose, onSave, onDelete, onDeleteSeries }: P
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due date &amp; time</label>
-            <input
-              type="datetime-local"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch { /* unsupported */ } }}
-              className="w-full px-3 py-2 border border-green-300 dark:border-green-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-green-50/60 dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
-            />
-            <div className="h-72" />
+            <DateTimePicker value={dueDate} onChange={setDueDate} accent="green" />
           </div>
           <div>
             <label className="flex items-center gap-2 cursor-pointer select-none">

@@ -27,7 +27,7 @@ export async function getAllTasks(includeDone = false): Promise<ApiTask[]> {
   return json.data as ApiTask[];
 }
 
-export async function createTask(data: { title: string; description?: string; dueDate?: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number; seriesId?: string; repeatDays?: number[] }): Promise<ApiTask[]> {
+export async function createTask(data: { title: string; description?: string; dueDate?: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number; seriesId?: string; repeatDays?: number[]; timezoneOffset?: number }): Promise<ApiTask[]> {
   const res = await apiFetch("/api/tasks", {
     method: "POST",
     body: JSON.stringify(data),

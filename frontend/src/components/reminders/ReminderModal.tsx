@@ -9,12 +9,14 @@ import {
   type ApiReminder,
   type ApiReminderCategory,
 } from "../../api/reminders";
+import { DateTimePicker } from "../DateTimePicker";
 
 function toDateTimeLocal(iso: string) {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
 
 interface Props {
   reminder: ApiReminder | null;
@@ -79,7 +81,7 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
             repeatCount,
             repeatInterval,
             repeatUnit,
-            ...(repeatDays.length > 0 && { repeatDays }),
+            ...(repeatDays.length > 0 && { repeatDays, timezoneOffset: new Date().getTimezoneOffset() }),
           });
           items.forEach((item) => onSave(item));
         }
@@ -89,7 +91,7 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
           ...(scheduledTime && { scheduledTime: new Date(scheduledTime).toISOString() }),
           ...(categoryId && { categoryId }),
           ...(repeats && { repeatCount, repeatInterval, repeatUnit }),
-          ...(repeats && repeatDays.length > 0 && { repeatDays }),
+          ...(repeats && repeatDays.length > 0 && { repeatDays, timezoneOffset: new Date().getTimezoneOffset() }),
         });
         items.forEach((item) => onSave(item));
       }
@@ -201,14 +203,7 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Scheduled time</label>
-            <input
-              type="datetime-local"
-              value={scheduledTime}
-              onChange={(e) => setScheduledTime(e.target.value)}
-              onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch { /* unsupported */ } }}
-              className="w-full px-3 py-2 border border-amber-300 dark:border-amber-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-amber-50/60 dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
-            />
-            <div className="h-72" />
+            <DateTimePicker value={scheduledTime} onChange={setScheduledTime} accent="amber" />
           </div>
 
           <div>

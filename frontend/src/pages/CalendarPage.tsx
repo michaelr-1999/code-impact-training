@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { createEvent, updateEvent, deleteEvent, deleteEventSeries, type ApiEvent } from "../api/events";
+import { DateTimePicker } from "../components/DateTimePicker";
 import type { ApiTask } from "../api/tasks";
 import type { ApiReminder } from "../api/reminders";
 import { getCalendarData } from "../api/calendar";
@@ -50,7 +51,7 @@ function startOfWeek(date: Date) {
 function CreateEventModal({ defaultDate, onClose, onSubmit }: {
   defaultDate: Date;
   onClose: () => void;
-  onSubmit: (data: { title: string; description: string; start: string; end: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number; repeatDays?: number[] }) => Promise<void>;
+  onSubmit: (data: { title: string; description: string; start: string; end: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number; repeatDays?: number[]; timezoneOffset?: number }) => Promise<void>;
 }) {
   const defaultStart = new Date(defaultDate);
   defaultStart.setHours(9, 0, 0, 0);
@@ -58,8 +59,11 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [start, setStart] = useState(toDateTimeLocal(defaultStart));
-  const [durationValue, setDurationValue] = useState(1);
-  const [durationUnit, setDurationUnit] = useState<"minutes" | "hours" | "days" | "weeks" | "months">("hours");
+  const [durationMinutes, setDurationMinutes] = useState(0);
+  const [durationHours, setDurationHours] = useState(0);
+  const [durationDays, setDurationDays] = useState(0);
+  const [durationWeeks, setDurationWeeks] = useState(0);
+  const [durationMonths, setDurationMonths] = useState(0);
   const [repeats, setRepeats] = useState(false);
   const [repeatCount, setRepeatCount] = useState(2);
   const [repeatInterval, setRepeatInterval] = useState(1);
@@ -71,19 +75,22 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) { setError("Title is required."); return; }
-    if (durationValue <= 0) { setError("Duration must be greater than 0."); return; }
+    if (durationMonths === 0 && durationWeeks === 0 && durationDays === 0 && durationHours === 0 && durationMinutes === 0) {
+      setError("Duration must be greater than 0.");
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {
       const startDate = new Date(start);
-      let endDate: Date;
-      if (durationUnit === "months") {
-        endDate = new Date(startDate);
-        endDate.setMonth(endDate.getMonth() + durationValue);
-      } else {
-        const msMap = { minutes: 60 * 1000, hours: 60 * 60 * 1000, days: 24 * 60 * 60 * 1000, weeks: 7 * 24 * 60 * 60 * 1000 };
-        endDate = new Date(startDate.getTime() + durationValue * msMap[durationUnit as keyof typeof msMap]);
-      }
+      let endDate = new Date(startDate);
+      if (durationMonths > 0) endDate.setMonth(endDate.getMonth() + durationMonths);
+      endDate = new Date(endDate.getTime() +
+        durationWeeks * 7 * 24 * 60 * 60 * 1000 +
+        durationDays * 24 * 60 * 60 * 1000 +
+        durationHours * 60 * 60 * 1000 +
+        durationMinutes * 60 * 1000
+      );
       const end = toDateTimeLocal(endDate);
       await onSubmit({
         title: title.trim(),
@@ -91,7 +98,7 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
         start,
         end,
         ...(repeats && { repeatCount, repeatInterval, repeatUnit }),
-        ...(repeats && repeatDays.length > 0 && { repeatDays }),
+        ...(repeats && repeatDays.length > 0 && { repeatDays, timezoneOffset: new Date().getTimezoneOffset() }),
       });
       onClose();
     } catch (err) {
@@ -142,36 +149,29 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Start <span className="text-red-500">*</span>
             </label>
-            <input
-              type="datetime-local"
-              value={start}
-              onChange={(e) => setStart(e.target.value)}
-              onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch { /* unsupported */ } }}
-              className="w-full px-3 py-2 border border-blue-300 dark:border-blue-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-blue-50/60 dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
-            />
-            <div className="h-72" />
+            <DateTimePicker value={start} onChange={setStart} accent="blue" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min={1}
-                value={durationValue}
-                onChange={(e) => setDurationValue(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
-              />
-              <select
-                value={durationUnit}
-                onChange={(e) => setDurationUnit(e.target.value as "minutes" | "hours" | "days" | "weeks" | "months")}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="minutes">minute(s)</option>
-                <option value="hours">hour(s)</option>
-                <option value="days">day(s)</option>
-                <option value="weeks">week(s)</option>
-                <option value="months">month(s)</option>
-              </select>
+            <div className="flex flex-wrap gap-3">
+              {([
+                ["Min", durationMinutes, setDurationMinutes],
+                ["Hours", durationHours, setDurationHours],
+                ["Days", durationDays, setDurationDays],
+                ["Weeks", durationWeeks, setDurationWeeks],
+                ["Months", durationMonths, setDurationMonths],
+              ] as [string, number, (v: number) => void][]).map(([label, value, setter]) => (
+                <div key={label} className="flex flex-col items-center gap-1">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{label}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={value}
+                    onChange={(e) => setter(Math.max(0, parseInt(e.target.value) || 0))}
+                    className="w-16 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
+                  />
+                </div>
+              ))}
             </div>
           </div>
           <div>
@@ -277,26 +277,20 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onDeleteSeries, on
   onAddMore: (items: CalendarEvent[]) => void;
 }) {
   const isSeries = event.seriesId !== null;
-  const diffMinutes = Math.round((new Date(event.endTime).getTime() - new Date(event.startTime).getTime()) / 60000);
-  const diffDays = diffMinutes / (60 * 24);
-  const initialUnit: "minutes" | "hours" | "days" | "weeks" | "months" =
-    Number.isInteger(diffDays) && diffDays % 30 === 0 ? "months"
-    : Number.isInteger(diffDays) && diffDays % 7 === 0 ? "weeks"
-    : Number.isInteger(diffDays) ? "days"
-    : diffMinutes % 60 === 0 ? "hours"
-    : "minutes";
-  const initialDuration =
-    initialUnit === "months" ? diffDays / 30
-    : initialUnit === "weeks" ? diffDays / 7
-    : initialUnit === "days" ? diffDays
-    : initialUnit === "hours" ? diffMinutes / 60
-    : diffMinutes;
+  const totalMinutes = Math.round((new Date(event.endTime).getTime() - new Date(event.startTime).getTime()) / 60000);
+  const initWeeks = Math.floor(totalMinutes / (7 * 24 * 60));
+  const initDays = Math.floor((totalMinutes % (7 * 24 * 60)) / (24 * 60));
+  const initHours = Math.floor((totalMinutes % (24 * 60)) / 60);
+  const initMins = totalMinutes % 60;
 
   const [title, setTitle] = useState(event.title);
   const [description, setDescription] = useState(event.description ?? "");
   const [start, setStart] = useState(toDateTimeLocal(new Date(event.startTime)));
-  const [durationValue, setDurationValue] = useState(initialDuration);
-  const [durationUnit, setDurationUnit] = useState<"minutes" | "hours" | "days" | "weeks" | "months">(initialUnit);
+  const [durationMinutes, setDurationMinutes] = useState(initMins);
+  const [durationHours, setDurationHours] = useState(initHours);
+  const [durationDays, setDurationDays] = useState(initDays);
+  const [durationWeeks, setDurationWeeks] = useState(initWeeks);
+  const [durationMonths, setDurationMonths] = useState(0);
   const [addMore, setAddMore] = useState(false);
   const [repeatCount, setRepeatCount] = useState(1);
   const [repeatInterval, setRepeatInterval] = useState(event.repeatInterval ?? 1);
@@ -314,14 +308,14 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onDeleteSeries, on
     setError("");
     try {
       const startDate = new Date(start);
-      let endDate: Date;
-      if (durationUnit === "months") {
-        endDate = new Date(startDate);
-        endDate.setMonth(endDate.getMonth() + durationValue);
-      } else {
-        const msMap = { minutes: 60 * 1000, hours: 60 * 60 * 1000, days: 24 * 60 * 60 * 1000, weeks: 7 * 24 * 60 * 60 * 1000 };
-        endDate = new Date(startDate.getTime() + durationValue * msMap[durationUnit as keyof typeof msMap]);
-      }
+      let endDate = new Date(startDate);
+      if (durationMonths > 0) endDate.setMonth(endDate.getMonth() + durationMonths);
+      endDate = new Date(endDate.getTime() +
+        durationWeeks * 7 * 24 * 60 * 60 * 1000 +
+        durationDays * 24 * 60 * 60 * 1000 +
+        durationHours * 60 * 60 * 1000 +
+        durationMinutes * 60 * 1000
+      );
       const end = toDateTimeLocal(endDate);
       const updated = await updateEvent(event.id, {
         title: title.trim(),
@@ -336,7 +330,7 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onDeleteSeries, on
           repeatCount,
           repeatInterval,
           repeatUnit,
-          ...(repeatDays.length > 0 && { repeatDays }),
+          ...(repeatDays.length > 0 && { repeatDays, timezoneOffset: new Date().getTimezoneOffset() }),
         });
         onAddMore(items);
       }
@@ -418,36 +412,29 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onDeleteSeries, on
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Start <span className="text-red-500">*</span>
             </label>
-            <input
-              type="datetime-local"
-              value={start}
-              onChange={(e) => setStart(e.target.value)}
-              onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch { /* unsupported */ } }}
-              className="w-full px-3 py-2 border border-blue-300 dark:border-blue-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-blue-50/60 dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer"
-            />
-            <div className="h-72" />
+            <DateTimePicker value={start} onChange={setStart} accent="blue" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                min={1}
-                value={durationValue}
-                onChange={(e) => setDurationValue(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
-              />
-              <select
-                value={durationUnit}
-                onChange={(e) => setDurationUnit(e.target.value as "minutes" | "hours" | "days" | "weeks" | "months")}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="minutes">minute(s)</option>
-                <option value="hours">hour(s)</option>
-                <option value="days">day(s)</option>
-                <option value="weeks">week(s)</option>
-                <option value="months">month(s)</option>
-              </select>
+            <div className="flex flex-wrap gap-3">
+              {([
+                ["Min", durationMinutes, setDurationMinutes],
+                ["Hours", durationHours, setDurationHours],
+                ["Days", durationDays, setDurationDays],
+                ["Weeks", durationWeeks, setDurationWeeks],
+                ["Months", durationMonths, setDurationMonths],
+              ] as [string, number, (v: number) => void][]).map(([label, value, setter]) => (
+                <div key={label} className="flex flex-col items-center gap-1">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{label}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={value}
+                    onChange={(e) => setter(Math.max(0, parseInt(e.target.value) || 0))}
+                    className="w-16 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
+                  />
+                </div>
+              ))}
             </div>
           </div>
           {isSeries && (
@@ -1038,7 +1025,7 @@ export default function CalendarPage() {
       .catch(() => {});
   }, [view, viewDate]);
 
-  async function handleSubmit(data: { title: string; description: string; start: string; end: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number; repeatDays?: number[] }) {
+  async function handleSubmit(data: { title: string; description: string; start: string; end: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number; repeatDays?: number[]; timezoneOffset?: number }) {
     const created = await createEvent(data);
     setEvents((prev) => [...prev, ...created]);
   }
