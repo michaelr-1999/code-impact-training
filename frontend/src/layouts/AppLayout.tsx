@@ -18,7 +18,7 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
   return (
     <div className="w-56 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col h-full">
       <div className="h-16 flex items-center px-6 border-b border-gray-200 dark:border-gray-800 shrink-0">
-        <span className="text-sm font-semibold text-gray-900 dark:text-white">Impact Training</span>
+        <span className="text-sm font-semibold text-gray-900 dark:text-white">Orbit</span>
       </div>
       <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
         {navItems.map(({ to, label }) => (
@@ -82,7 +82,7 @@ export default function AppLayout() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="ml-3 text-sm font-semibold text-gray-900 dark:text-white">Impact Training</span>
+          <span className="ml-3 text-sm font-semibold text-gray-900 dark:text-white">Orbit</span>
         </header>
 
         <main className="flex-1 bg-gray-50 dark:bg-black">
