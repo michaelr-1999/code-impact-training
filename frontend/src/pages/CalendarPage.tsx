@@ -511,33 +511,42 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onDeleteSeries, on
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex items-center justify-between pt-2">
             {confirmingDelete ? (
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-col gap-2 w-full">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Delete this event?</span>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                >
-                  {deleting ? "Deleting…" : "Just this one"}
-                </button>
-                {isSeries && (
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={handleDeleteSeries}
+                    onClick={handleDelete}
                     disabled={deleting}
-                    className="px-3 py-1.5 text-sm font-medium text-white bg-red-700 rounded-lg hover:bg-red-800 transition-colors disabled:opacity-50"
+                    className="whitespace-nowrap px-2.5 py-1 text-xs font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
                   >
-                    All in series
+                    {deleting ? "Deleting…" : "Just this one"}
                   </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setConfirmingDelete(false)}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-                >
-                  Cancel
-                </button>
+                  {isSeries && (
+                    <button
+                      type="button"
+                      onClick={handleDeleteSeries}
+                      disabled={deleting}
+                      className="whitespace-nowrap px-2.5 py-1 text-xs font-medium text-white bg-red-700 border border-transparent rounded-lg hover:bg-red-800 transition-colors disabled:opacity-50"
+                    >
+                      All in series
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingDelete(false)}
+                    className="whitespace-nowrap px-2.5 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="whitespace-nowrap ml-auto px-2.5 py-1 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    {submitting ? "Saving…" : "Save changes"}
+                  </button>
+                </div>
               </div>
             ) : (
               <button
@@ -548,22 +557,24 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onDeleteSeries, on
                 Delete
               </button>
             )}
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {submitting ? "Saving…" : "Save changes"}
-              </button>
-            </div>
+            {!confirmingDelete && (
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {submitting ? "Saving…" : "Save changes"}
+                </button>
+              </div>
+            )}
           </div>
         </form>
       </div>
