@@ -40,6 +40,20 @@ export default function ProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarSaving, setAvatarSaving] = useState(false);
 
+  // Notifications
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
+    "Notification" in window ? Notification.permission : "denied"
+  );
+
+  async function handleRequestNotifPermission() {
+    const result = await Notification.requestPermission();
+    setNotifPermission(result);
+  }
+
+  function handleTestNotification() {
+    new Notification("Event starting in 5 minutes", { body: "Team standup", icon: "/favicon.ico" });
+  }
+
   async function resizeImage(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -379,6 +393,47 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Notifications */}
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Notifications</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          Get browser notifications 5 minutes before and at the start of events, tasks, and reminders.
+        </p>
+        {!("Notification" in window) ? (
+          <p className="text-sm text-red-500">Your browser does not support notifications.</p>
+        ) : notifPermission === "granted" ? (
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 dark:text-moss bg-green-50 dark:bg-moss-subtle px-2 py-1 rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 dark:bg-moss" />
+              Enabled
+            </span>
+            <button
+              onClick={handleTestNotification}
+              className="px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-moss hover:text-blue-700 dark:hover:text-moss-hover border border-blue-300 dark:border-moss rounded-lg hover:bg-blue-50 dark:hover:bg-moss-subtle transition-colors"
+            >
+              Send test notification
+            </button>
+          </div>
+        ) : notifPermission === "denied" ? (
+          <div>
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-red-700 bg-red-50 dark:bg-red-950 dark:text-red-400 px-2 py-1 rounded-full mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+              Blocked
+            </span>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Notifications are blocked. To enable them, click the lock icon in your browser's address bar and allow notifications for this site.
+            </p>
+          </div>
+        ) : (
+          <button
+            onClick={handleRequestNotifPermission}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-moss dark:hover:bg-moss-hover dark:text-black text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            Enable notifications
+          </button>
+        )}
       </div>
 
       {/* Sign out */}
