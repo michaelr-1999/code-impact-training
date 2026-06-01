@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { getMe, putProfile, putPassword } from "../api/auth";
 
-type User = { id: string; name: string; email: string };
+type User = { id: string; name: string; email: string; avatarUrl?: string | null };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -34,6 +34,69 @@ export default function ProfilePage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Avatar upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarSaving, setAvatarSaving] = useState(false);
+
+  async function resizeImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX = 200;
+        const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
+        const w = Math.round(img.width * ratio);
+        const h = Math.round(img.height * ratio);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const resized = await resizeImage(file);
+    setAvatarPreview(resized);
+    e.target.value = "";
+  }
+
+  async function handleSaveAvatar() {
+    if (!avatarPreview) return;
+    setAvatarSaving(true);
+    try {
+      const updated = await putProfile({ avatarUrl: avatarPreview });
+      updateUser(updated);
+      setUser(updated);
+      setAvatarPreview(null);
+    } catch {
+      // keep preview so user can retry
+    } finally {
+      setAvatarSaving(false);
+    }
+  }
+
+  async function handleRemoveAvatar() {
+    setAvatarSaving(true);
+    try {
+      const updated = await putProfile({ avatarUrl: null });
+      updateUser(updated);
+      setUser(updated);
+      setAvatarPreview(null);
+    } catch {
+      // silently fail
+    } finally {
+      setAvatarSaving(false);
+    }
+  }
 
   useEffect(() => {
     if (ctxUser) return;
@@ -172,9 +235,13 @@ export default function ProfilePage() {
           <>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-blue-100 dark:bg-moss-subtle flex items-center justify-center shrink-0">
-                  <span className="text-lg font-semibold text-blue-700 dark:text-moss">{initials}</span>
-                </div>
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="Profile" className="w-14 h-14 rounded-full object-cover shrink-0" />
+                ) : (
+                  <div className="w-14 h-14 rounded-full bg-blue-100 dark:bg-moss-subtle flex items-center justify-center shrink-0">
+                    <span className="text-lg font-semibold text-blue-700 dark:text-moss">{initials}</span>
+                  </div>
+                )}
                 <div>
                   <p className="text-base font-semibold text-gray-900 dark:text-white">{user.name}</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{user.email}</p>
@@ -230,6 +297,88 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Profile picture */}
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Profile picture</h2>
+        <div className="flex items-center gap-5">
+          {/* Avatar display */}
+          <div className="relative group shrink-0">
+            {avatarPreview ?? user.avatarUrl ? (
+              <img
+                src={avatarPreview ?? user.avatarUrl!}
+                alt="Profile"
+                className="w-20 h-20 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-blue-100 dark:bg-moss-subtle flex items-center justify-center">
+                <span className="text-2xl font-semibold text-blue-700 dark:text-moss">{initials}</span>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+              aria-label="Change photo"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col gap-2">
+            {avatarPreview ? (
+              <>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Preview — save to apply</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveAvatar}
+                    disabled={avatarSaving}
+                    className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 transition-colors"
+                  >
+                    {avatarSaving ? "Saving…" : "Save photo"}
+                  </button>
+                  <button
+                    onClick={() => setAvatarPreview(null)}
+                    disabled={avatarSaving}
+                    className="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-3 py-1.5 text-sm font-medium text-blue-600 dark:text-moss hover:text-blue-700 dark:hover:text-moss-hover border border-blue-300 dark:border-moss rounded-lg hover:bg-blue-50 dark:hover:bg-moss-subtle transition-colors"
+                >
+                  Change photo
+                </button>
+                {user.avatarUrl && (
+                  <button
+                    onClick={handleRemoveAvatar}
+                    disabled={avatarSaving}
+                    className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    Remove photo
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Sign out */}

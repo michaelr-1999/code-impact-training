@@ -3,15 +3,15 @@ import { updateUser, updatePassword } from "../services/userService";
 import { AppError } from "../lib/errors";
 
 export async function updateUserController(req: Request, res: Response) {
-  const { name, email } = req.body as { name?: string; email?: string };
+  const { name, email, avatarUrl } = req.body as { name?: string; email?: string; avatarUrl?: string | null };
 
-  if (!name && !email) {
-    res.status(400).json({ success: false, error: "At least one of name or email is required" });
+  if (!name && !email && avatarUrl === undefined) {
+    res.status(400).json({ success: false, error: "At least one field is required" });
     return;
   }
 
   try {
-    const user = await updateUser(req.user.id, { name, email });
+    const user = await updateUser(req.user.id, { name, email, avatarUrl });
     res.status(200).json({ success: true, data: user });
   } catch (err) {
     const status = err instanceof AppError ? err.statusCode : 500;
