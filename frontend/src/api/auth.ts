@@ -16,11 +16,11 @@ export async function register(name: string, email: string, password: string) {
 
 import { apiFetch } from "../lib/api";
 
-export async function putProfile(data: { name?: string; email?: string }) {
+export async function putProfile(data: { name?: string; email?: string; avatarUrl?: string | null }) {
   const res = await apiFetch("/api/users/me", { method: "PUT", body: JSON.stringify(data) });
   const json = await res.json();
   if (!res.ok) throw new Error(json.error ?? "Failed to update profile");
-  return json.data as { id: string; name: string; email: string };
+  return json.data as { id: string; name: string; email: string; avatarUrl?: string | null };
 }
 
 export async function putPassword(data: { currentPassword: string; newPassword: string }) {

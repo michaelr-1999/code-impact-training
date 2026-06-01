@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { registerLogout } from "../lib/api";
 
-type User = { id: string; name: string; email: string };
+type User = { id: string; name: string; email: string; avatarUrl?: string | null };
 
 type AuthContextValue = {
   token: string | null;

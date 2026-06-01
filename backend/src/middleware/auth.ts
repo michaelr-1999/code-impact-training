@@ -4,7 +4,7 @@ import prisma from "../lib/prisma";
 
 declare module "express-serve-static-core" {
   interface Request {
-    user: { id: string; name: string; email: string };
+    user: { id: string; name: string; email: string; avatarUrl: string | null };
   }
 }
 
@@ -28,7 +28,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 
   const user = await prisma.user.findUnique({
     where: { id: payload.userId },
-    select: { id: true, name: true, email: true },
+    select: { id: true, name: true, email: true, avatarUrl: true },
   });
 
   if (!user) {

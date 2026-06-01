@@ -4,7 +4,7 @@ import { AppError } from "../lib/errors";
 
 const SALT_ROUNDS = 10;
 
-export async function updateUser(userId: string, data: { name?: string; email?: string }) {
+export async function updateUser(userId: string, data: { name?: string; email?: string; avatarUrl?: string | null }) {
   if (data.email) {
     const existing = await prisma.user.findUnique({ where: { email: data.email } });
     if (existing && existing.id !== userId) {
@@ -15,7 +15,7 @@ export async function updateUser(userId: string, data: { name?: string; email?: 
   return prisma.user.update({
     where: { id: userId },
     data,
-    select: { id: true, name: true, email: true },
+    select: { id: true, name: true, email: true, avatarUrl: true },
   });
 }
 
