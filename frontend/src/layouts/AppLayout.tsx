@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
+import { useNotifications } from "../hooks/useNotifications";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard" },
@@ -43,6 +44,7 @@ function Sidebar({ onClose }: { onClose?: () => void }) {
 
 export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  useNotifications(true);
 
   return (
     <div className="flex min-h-screen">
