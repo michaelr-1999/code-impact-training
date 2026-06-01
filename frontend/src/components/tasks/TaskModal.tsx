@@ -269,7 +269,7 @@ export function TaskModal({ task, onClose, onSave, onDelete, onDeleteSeries }: P
                     type="button"
                     onClick={handleDelete}
                     disabled={deleting}
-                    className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                    className="whitespace-nowrap px-3 py-1.5 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
                   >
                     {deleting ? "Deleting…" : "Just this one"}
                   </button>
@@ -278,7 +278,7 @@ export function TaskModal({ task, onClose, onSave, onDelete, onDeleteSeries }: P
                       type="button"
                       onClick={handleDeleteSeries}
                       disabled={deleting}
-                      className="px-3 py-1.5 text-sm font-medium text-white bg-red-700 rounded-lg hover:bg-red-800 transition-colors disabled:opacity-50"
+                      className="whitespace-nowrap px-3 py-1.5 text-sm font-medium text-white bg-red-700 border border-transparent rounded-lg hover:bg-red-800 transition-colors disabled:opacity-50"
                     >
                       All in series
                     </button>
@@ -286,7 +286,7 @@ export function TaskModal({ task, onClose, onSave, onDelete, onDeleteSeries }: P
                   <button
                     type="button"
                     onClick={() => setConfirmingDelete(false)}
-                    className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                    className="whitespace-nowrap px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                   >
                     Cancel
                   </button>
