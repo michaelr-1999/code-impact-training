@@ -12,18 +12,20 @@ export default function TasksPage() {
   const [editingTask, setEditingTask] = useState<ApiTask | null>(null);
 
   useEffect(() => {
-    getAllTasks(true).then(setTasks).catch(() => {});
+    const targetId = editId;
+    getAllTasks(true).then((loadedTasks) => {
+      setTasks(loadedTasks);
+      if (targetId) {
+        const task = loadedTasks.find((t) => t.id === targetId);
+        if (task) {
+          setEditingTask(task);
+          setModalOpen(true);
+          setSearchParams({}, { replace: true });
+        }
+      }
+    }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (!editId || tasks.length === 0) return;
-    const task = tasks.find((t) => t.id === editId);
-    if (task) {
-      setEditingTask(task);
-      setModalOpen(true);
-      setSearchParams({}, { replace: true });
-    }
-  }, [editId, tasks]);
 
   const now = new Date();
 

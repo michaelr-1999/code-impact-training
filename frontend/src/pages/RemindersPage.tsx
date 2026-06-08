@@ -22,20 +22,23 @@ export default function RemindersPage() {
   const [editReminder, setEditReminder] = useState<ApiReminder | null>(null);
 
   useEffect(() => {
+    const targetId = editId;
     Promise.all([getAllReminders(), getCategories()])
-      .then(([r, c]) => { setReminders(r); setCategories(c); })
+      .then(([loadedReminders, c]) => {
+        setReminders(loadedReminders);
+        setCategories(c);
+        if (targetId) {
+          const reminder = loadedReminders.find((r) => r.id === targetId);
+          if (reminder) {
+            setEditReminder(reminder);
+            setModalOpen(true);
+            setSearchParams({}, { replace: true });
+          }
+        }
+      })
       .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (!editId || reminders.length === 0) return;
-    const reminder = reminders.find((r) => r.id === editId);
-    if (reminder) {
-      setEditReminder(reminder);
-      setModalOpen(true);
-      setSearchParams({}, { replace: true });
-    }
-  }, [editId, reminders]);
 
   function openCreate() {
     setEditReminder(null);
