@@ -63,6 +63,9 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) { setError("Title is required."); return; }
+    if (!isEdit && scheduledTime && new Date(scheduledTime) < new Date()) {
+      setError("Scheduled time cannot be in the past."); return;
+    }
     setSubmitting(true);
     setError("");
     try {

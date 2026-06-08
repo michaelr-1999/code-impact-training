@@ -79,6 +79,10 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
       setError("Duration must be greater than 0.");
       return;
     }
+    if (new Date(start) < new Date()) {
+      setError("Start time cannot be in the past.");
+      return;
+    }
     setSubmitting(true);
     setError("");
     try {

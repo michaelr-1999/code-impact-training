@@ -56,6 +56,9 @@ export function TaskModal({ task, onClose, onSave, onDelete, onDeleteSeries }: P
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) { setError("Title is required."); return; }
+    if (!isEdit && dueDate && new Date(dueDate) < new Date()) {
+      setError("Due date cannot be in the past."); return;
+    }
     setSubmitting(true);
     setError("");
     try {
