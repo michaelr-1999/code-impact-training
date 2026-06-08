@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   getAllReminders,
   getCategories,
@@ -12,6 +13,8 @@ import { ReminderItem } from "../components/reminders/ReminderItem";
 import { ReminderModal } from "../components/reminders/ReminderModal";
 
 export default function RemindersPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
   const [reminders, setReminders] = useState<ApiReminder[]>([]);
   const [categories, setCategories] = useState<ApiReminderCategory[]>([]);
   const [showCompleted, setShowCompleted] = useState(false);
@@ -19,12 +22,22 @@ export default function RemindersPage() {
   const [editReminder, setEditReminder] = useState<ApiReminder | null>(null);
 
   useEffect(() => {
+    const targetId = editId;
     Promise.all([getAllReminders(), getCategories()])
-      .then(([r, c]) => {
-        setReminders(r);
+      .then(([loadedReminders, c]) => {
+        setReminders(loadedReminders);
         setCategories(c);
+        if (targetId) {
+          const reminder = loadedReminders.find((r) => r.id === targetId);
+          if (reminder) {
+            setEditReminder(reminder);
+            setModalOpen(true);
+            setSearchParams({}, { replace: true });
+          }
+        }
       })
       .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function openCreate() {

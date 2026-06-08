@@ -1,15 +1,30 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { getAllTasks, completeTask, incompleteTask, type ApiTask } from "../api/tasks";
 import { TaskList } from "../components/tasks/TaskList";
 import { TaskModal } from "../components/tasks/TaskModal";
 
 export default function TasksPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
   const [tasks, setTasks] = useState<ApiTask[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ApiTask | null>(null);
 
   useEffect(() => {
-    getAllTasks(true).then(setTasks).catch(() => {});
+    const targetId = editId;
+    getAllTasks(true).then((loadedTasks) => {
+      setTasks(loadedTasks);
+      if (targetId) {
+        const task = loadedTasks.find((t) => t.id === targetId);
+        if (task) {
+          setEditingTask(task);
+          setModalOpen(true);
+          setSearchParams({}, { replace: true });
+        }
+      }
+    }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const now = new Date();
