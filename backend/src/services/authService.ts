@@ -25,7 +25,7 @@ export async function registerUser(name: string, email: string, password: string
 
   const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "7d" });
 
-  return { token, user: { id: user.id, name: user.name, email: user.email } };
+  return { token, user: { id: user.id, name: user.name, email: user.email, avatarUrl: null } };
 }
 
 export async function loginUser(email: string, password: string) {
@@ -39,5 +39,5 @@ export async function loginUser(email: string, password: string) {
 
   const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: "7d" });
 
-  return { token, user: { id: user.id, name: user.name, email: user.email } };
+  return { token, user: { id: user.id, name: user.name, email: user.email, avatarUrl: user.avatarUrl } };
 }

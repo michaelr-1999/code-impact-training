@@ -11,7 +11,7 @@ export async function register(name: string, email: string, password: string) {
     throw new Error(data.error ?? "Registration failed");
   }
 
-  return data.data as { token: string; user: { id: string; name: string; email: string } };
+  return data.data as { token: string; user: { id: string; name: string; email: string; avatarUrl?: string | null } };
 }
 
 import { apiFetch } from "../lib/api";
@@ -35,7 +35,7 @@ export async function getMe(token: string) {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "Failed to fetch profile");
-  return data.data as { id: string; name: string; email: string };
+  return data.data as { id: string; name: string; email: string; avatarUrl?: string | null };
 }
 
 export async function login(email: string, password: string) {
@@ -51,5 +51,5 @@ export async function login(email: string, password: string) {
     throw new Error(data.error ?? "Login failed");
   }
 
-  return data.data as { token: string; user: { id: string; name: string; email: string } };
+  return data.data as { token: string; user: { id: string; name: string; email: string; avatarUrl?: string | null } };
 }
