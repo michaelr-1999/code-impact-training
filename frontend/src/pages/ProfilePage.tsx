@@ -29,11 +29,11 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
   // Avatar upload state
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -163,7 +163,7 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleChangePassword() {
+  function handleChangePassword() {
     if (newPassword.length < 8) {
       setPasswordError("New password must be at least 8 characters.");
       return;
@@ -173,14 +173,16 @@ export default function ProfilePage() {
       return;
     }
     setPasswordError(null);
+    setShowPasswordConfirm(true);
+  }
+
+  async function handleConfirmPasswordChange() {
     setPasswordSaving(true);
+    setShowPasswordConfirm(false);
     try {
       await putPassword({ currentPassword, newPassword });
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setPasswordSuccess("Password updated.");
-      setTimeout(() => setPasswordSuccess(null), 4000);
+      logout();
+      navigate("/login", { replace: true });
     } catch (err) {
       setPasswordError(err instanceof Error ? err.message : "Failed to update password.");
     } finally {
@@ -217,6 +219,7 @@ export default function ProfilePage() {
     .slice(0, 2) || "?";
 
   return (
+    <>
     <div className="p-4 sm:p-8 max-w-lg space-y-4">
       <div className="mb-2 flex items-center gap-3">
         <button
@@ -495,7 +498,6 @@ export default function ProfilePage() {
             </div>
           </div>
           {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
-          {passwordSuccess && <p className="text-sm text-green-600 dark:text-moss">{passwordSuccess}</p>}
           <button
             onClick={handleChangePassword}
             disabled={passwordSaving}
@@ -506,5 +508,31 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+
+    {showPasswordConfirm && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl p-6 w-full max-w-sm mx-4">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Change password?</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
+            You're about to change your password. Clicking <span className="font-medium text-gray-700 dark:text-gray-300">"Confirm"</span> will change your password and bring you back to the sign in page.
+          </p>
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={() => setShowPasswordConfirm(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmPasswordChange}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-moss dark:hover:bg-moss-hover dark:text-black text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
