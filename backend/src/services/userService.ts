@@ -30,6 +30,9 @@ export async function updatePassword(userId: string, currentPassword: string, ne
   const valid = await bcrypt.compare(currentPassword, user.password);
   if (!valid) throw new AppError("Current password is incorrect", 401);
 
+  const same = await bcrypt.compare(newPassword, user.password);
+  if (same) throw new AppError("New password must be different from your current password", 400);
+
   const hashed = await bcrypt.hash(newPassword, SALT_ROUNDS);
   await prisma.user.update({ where: { id: userId }, data: { password: hashed } });
 }
