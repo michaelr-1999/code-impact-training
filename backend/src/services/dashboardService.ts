@@ -40,7 +40,7 @@ export async function getDashboardToday(userId: string, tzOffsetMinutes = 0) {
 
   const [events, tasks, reminders] = await Promise.all([
     prisma.event.findMany({
-      where: { userId, startTime: { gte: startOfDay, lte: endOfDay } },
+      where: { userId, startTime: { lte: endOfDay }, endTime: { gte: startOfDay } },
       orderBy: { startTime: "asc" },
     }),
 
