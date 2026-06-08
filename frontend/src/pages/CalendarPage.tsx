@@ -593,17 +593,10 @@ function MonthView({ viewDate, today, events, tasks, reminders, onDayClick, onEv
   const daysInPrevMonth = new Date(year, month, 0).getDate();
 
   const cells: { day: number; currentMonth: boolean }[] = [];
-
-  for (let i = firstDayOfMonth - 1; i >= 0; i--) {
-    cells.push({ day: daysInPrevMonth - i, currentMonth: false });
-  }
-  for (let d = 1; d <= daysInMonth; d++) {
-    cells.push({ day: d, currentMonth: true });
-  }
+  for (let i = firstDayOfMonth - 1; i >= 0; i--) cells.push({ day: daysInPrevMonth - i, currentMonth: false });
+  for (let d = 1; d <= daysInMonth; d++) cells.push({ day: d, currentMonth: true });
   const remaining = 42 - cells.length;
-  for (let d = 1; d <= remaining; d++) {
-    cells.push({ day: d, currentMonth: false });
-  }
+  for (let d = 1; d <= remaining; d++) cells.push({ day: d, currentMonth: false });
 
   return (
     <>
@@ -617,9 +610,15 @@ function MonthView({ viewDate, today, events, tasks, reminders, onDayClick, onEv
       <div className="grid grid-cols-7">
         {cells.map((cell, i) => {
           const cellDate = new Date(year, month, cell.day);
+          const cellDayStart = cellDate;
+          const cellDayEnd = new Date(year, month, cell.day + 1);
           const isToday = cell.currentMonth && isSameDay(cellDate, today);
           const cellEvents = cell.currentMonth
-            ? events.filter((e) => isSameDay(new Date(e.startTime), cellDate))
+            ? events.filter((e) => {
+                const s = new Date(e.startTime);
+                const en = new Date(e.endTime);
+                return s < cellDayEnd && en > cellDayStart;
+              })
             : [];
           const cellTasks = cell.currentMonth
             ? tasks.filter((t) => t.dueDate && isSameDay(new Date(t.dueDate), cellDate))
