@@ -704,6 +704,45 @@ function minuteOffset() {
   return (new Date().getMinutes() / 60) * CELL_HEIGHT;
 }
 
+function computeOverlapLayout(
+  items: { key: string; top: number; height: number }[]
+): Map<string, { columnIndex: number; totalColumns: number }> {
+  if (items.length === 0) return new Map();
+  const sorted = [...items].sort((a, b) => a.top - b.top);
+  const colEnds: number[] = [];
+  const cols: number[] = [];
+  for (const item of sorted) {
+    let col = colEnds.findIndex((end) => end <= item.top);
+    if (col === -1) { col = colEnds.length; colEnds.push(0); }
+    colEnds[col] = item.top + item.height;
+    cols.push(col);
+  }
+  const n = sorted.length;
+  const visited = new Array(n).fill(false);
+  const result = new Map<string, { columnIndex: number; totalColumns: number }>();
+  for (let i = 0; i < n; i++) {
+    if (visited[i]) continue;
+    const cluster: number[] = [];
+    const queue = [i];
+    visited[i] = true;
+    while (queue.length > 0) {
+      const curr = queue.shift()!;
+      cluster.push(curr);
+      for (let j = 0; j < n; j++) {
+        if (!visited[j] && sorted[curr].top < sorted[j].top + sorted[j].height && sorted[j].top < sorted[curr].top + sorted[curr].height) {
+          visited[j] = true;
+          queue.push(j);
+        }
+      }
+    }
+    const maxCol = Math.max(...cluster.map((k) => cols[k]));
+    for (const k of cluster) {
+      result.set(sorted[k].key, { columnIndex: cols[k], totalColumns: maxCol + 1 });
+    }
+  }
+  return result;
+}
+
 // ── Week view ─────────────────────────────────────────────────────────────────
 
 function WeekView({ viewDate, today, events, tasks, reminders, onEventClick, onTaskClick, onReminderClick }: { viewDate: Date; today: Date; events: CalendarEvent[]; tasks: ApiTask[]; reminders: ApiReminder[]; onEventClick: (event: CalendarEvent) => void; onTaskClick: () => void; onReminderClick: () => void }) {
@@ -761,81 +800,53 @@ function WeekView({ viewDate, today, events, tasks, reminders, onEventClick, onT
               ))}
             </div>
           ))}
-          {events.flatMap((event) => {
-            const eventStart = new Date(event.startTime);
-            const eventEnd = new Date(event.endTime);
-            return days.flatMap((day, dayIndex) => {
-              const dayStart = new Date(day);
-              dayStart.setHours(0, 0, 0, 0);
-              const dayEnd = new Date(dayStart);
-              dayEnd.setDate(dayStart.getDate() + 1);
-              if (eventEnd <= dayStart || eventStart >= dayEnd) return [];
-              const segStart = eventStart > dayStart ? eventStart : dayStart;
-              const segEnd = eventEnd < dayEnd ? eventEnd : dayEnd;
-              const dayMs = 86400000;
-              const top = ((segStart.getTime() - dayStart.getTime()) / dayMs) * 24 * CELL_HEIGHT;
-              const height = Math.max(
-                ((segEnd.getTime() - segStart.getTime()) / dayMs) * 24 * CELL_HEIGHT,
-                CELL_HEIGHT / 2
-              );
-              return [(
+          {days.flatMap((day, dayIndex) => {
+            const dayStart = new Date(day);
+            dayStart.setHours(0, 0, 0, 0);
+            const dayEnd = new Date(dayStart);
+            dayEnd.setDate(dayStart.getDate() + 1);
+            const dayMs = 86400000;
+            const slotItems: { key: string; top: number; height: number; title: string; onClick: () => void; className: string }[] = [];
+            for (const event of events) {
+              const s = new Date(event.startTime), e = new Date(event.endTime);
+              if (e <= dayStart || s >= dayEnd) continue;
+              const segS = s > dayStart ? s : dayStart;
+              const segE = e < dayEnd ? e : dayEnd;
+              const top = ((segS.getTime() - dayStart.getTime()) / dayMs) * 24 * CELL_HEIGHT;
+              const height = Math.max(((segE.getTime() - segS.getTime()) / dayMs) * 24 * CELL_HEIGHT, CELL_HEIGHT / 2);
+              slotItems.push({ key: `e-${event.id}-${dayIndex}`, top, height, title: event.title, onClick: () => onEventClick(event), className: calendarColors.event.block });
+            }
+            for (const task of tasks) {
+              if (!task.dueDate || !isSameDay(new Date(task.dueDate), day)) continue;
+              const due = new Date(task.dueDate);
+              const top = (due.getHours() + due.getMinutes() / 60) * CELL_HEIGHT;
+              slotItems.push({ key: `t-${task.id}-${dayIndex}`, top, height: CELL_HEIGHT / 2, title: task.title, onClick: onTaskClick, className: calendarColors.task.block });
+            }
+            for (const reminder of reminders) {
+              if (!reminder.scheduledTime || !isSameDay(new Date(reminder.scheduledTime), day)) continue;
+              const scheduled = new Date(reminder.scheduledTime);
+              const top = (scheduled.getHours() + scheduled.getMinutes() / 60) * CELL_HEIGHT;
+              slotItems.push({ key: `r-${reminder.id}-${dayIndex}`, top, height: CELL_HEIGHT / 2, title: reminder.title, onClick: onReminderClick, className: calendarColors.reminder.block });
+            }
+            const layout = computeOverlapLayout(slotItems);
+            return slotItems.map((item) => {
+              const { columnIndex: col, totalColumns: total } = layout.get(item.key) ?? { columnIndex: 0, totalColumns: 1 };
+              return (
                 <div
-                  key={`${event.id}-${dayIndex}`}
-                  onClick={() => onEventClick(event)}
-                  className={`absolute text-xs rounded px-1 py-0.5 overflow-hidden cursor-pointer ${calendarColors.event.block}`}
+                  key={item.key}
+                  onClick={item.onClick}
+                  className={`absolute text-xs rounded px-1 py-0.5 overflow-hidden cursor-pointer ${item.className}`}
                   style={{
-                    top: `${top}px`,
-                    height: `${height}px`,
-                    left: `calc(56px + ${dayIndex} * (100% - 56px) / 7 + 2px)`,
-                    width: `calc((100% - 56px) / 7 - 4px)`,
+                    top: `${item.top}px`,
+                    height: `${item.height}px`,
+                    left: `calc(56px + ${(dayIndex * total + col) / (7 * total)} * (100% - 56px) + 1px)`,
+                    width: `calc((100% - 56px) / ${7 * total} - 2px)`,
                   }}
                 >
-                  {event.title}
+                  {item.title}
                 </div>
-              )];
+              );
             });
-          })}
-          {tasks.filter((t) => t.dueDate).map((task) => {
-            const due = new Date(task.dueDate!);
-            const dayIndex = days.findIndex((d) => isSameDay(d, due));
-            if (dayIndex === -1) return null;
-            const top = (due.getHours() + due.getMinutes() / 60) * CELL_HEIGHT;
-            return (
-              <div
-                key={task.id}
-                onClick={onTaskClick}
-                className={`absolute text-xs rounded px-1 py-0.5 overflow-hidden cursor-pointer ${calendarColors.task.block}`}
-                style={{
-                  top: `${top}px`,
-                  height: `${CELL_HEIGHT / 2}px`,
-                  left: `calc(56px + ${dayIndex} * (100% - 56px) / 7 + 2px)`,
-                  width: `calc((100% - 56px) / 7 - 4px)`,
-                }}
-              >
-                {task.title}
-              </div>
-            );
-          })}
-          {reminders.filter((r) => r.scheduledTime).map((reminder) => {
-            const scheduled = new Date(reminder.scheduledTime!);
-            const dayIndex = days.findIndex((d) => isSameDay(d, scheduled));
-            if (dayIndex === -1) return null;
-            const top = (scheduled.getHours() + scheduled.getMinutes() / 60) * CELL_HEIGHT;
-            return (
-              <div
-                key={reminder.id}
-                onClick={onReminderClick}
-                className={`absolute text-xs rounded px-1 py-0.5 overflow-hidden cursor-pointer ${calendarColors.reminder.block}`}
-                style={{
-                  top: `${top}px`,
-                  height: `${CELL_HEIGHT / 2}px`,
-                  left: `calc(56px + ${dayIndex} * (100% - 56px) / 7 + 2px)`,
-                  width: `calc((100% - 56px) / 7 - 4px)`,
-                }}
-              >
-                {reminder.title}
-              </div>
-            );
           })}
         </div>
       </div>
@@ -858,6 +869,35 @@ function DayView({ viewDate, today, events, tasks, reminders, onEventClick, onTa
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const dayStart = new Date(viewDate);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setDate(dayStart.getDate() + 1);
+  const dayMs = 86400000;
+  const daySlotItems: { key: string; top: number; height: number; title: string; onClick: () => void; className: string }[] = [];
+  for (const event of events) {
+    const s = new Date(event.startTime), e = new Date(event.endTime);
+    if (e <= dayStart || s >= dayEnd) continue;
+    const segS = s > dayStart ? s : dayStart;
+    const segE = e < dayEnd ? e : dayEnd;
+    const top = ((segS.getTime() - dayStart.getTime()) / dayMs) * 24 * CELL_HEIGHT;
+    const height = Math.max(((segE.getTime() - segS.getTime()) / dayMs) * 24 * CELL_HEIGHT, CELL_HEIGHT / 2);
+    daySlotItems.push({ key: `e-${event.id}`, top, height, title: event.title, onClick: () => onEventClick(event), className: calendarColors.event.block });
+  }
+  for (const task of tasks) {
+    if (!task.dueDate || !isSameDay(new Date(task.dueDate), viewDate)) continue;
+    const due = new Date(task.dueDate);
+    const top = (due.getHours() + due.getMinutes() / 60) * CELL_HEIGHT;
+    daySlotItems.push({ key: `t-${task.id}`, top, height: CELL_HEIGHT / 2, title: task.title, onClick: onTaskClick, className: calendarColors.task.block });
+  }
+  for (const reminder of reminders) {
+    if (!reminder.scheduledTime || !isSameDay(new Date(reminder.scheduledTime), viewDate)) continue;
+    const scheduled = new Date(reminder.scheduledTime);
+    const top = (scheduled.getHours() + scheduled.getMinutes() / 60) * CELL_HEIGHT;
+    daySlotItems.push({ key: `r-${reminder.id}`, top, height: CELL_HEIGHT / 2, title: reminder.title, onClick: onReminderClick, className: calendarColors.reminder.block });
+  }
+  const dayLayout = computeOverlapLayout(daySlotItems);
 
   return (
     <div>
@@ -900,57 +940,21 @@ function DayView({ viewDate, today, events, tasks, reminders, onEventClick, onTa
               </div>
             );
           })}
-          {events.filter((e) => {
-            const dayStart = new Date(viewDate); dayStart.setHours(0, 0, 0, 0);
-            const dayEnd = new Date(dayStart); dayEnd.setDate(dayStart.getDate() + 1);
-            return new Date(e.endTime) > dayStart && new Date(e.startTime) < dayEnd;
-          }).map((event) => {
-            const dayStart = new Date(viewDate); dayStart.setHours(0, 0, 0, 0);
-            const dayEnd = new Date(dayStart); dayEnd.setDate(dayStart.getDate() + 1);
-            const segStart = new Date(event.startTime) > dayStart ? new Date(event.startTime) : dayStart;
-            const segEnd = new Date(event.endTime) < dayEnd ? new Date(event.endTime) : dayEnd;
-            const dayMs = 86400000;
-            const top = ((segStart.getTime() - dayStart.getTime()) / dayMs) * 24 * CELL_HEIGHT;
-            const height = Math.max(
-              ((segEnd.getTime() - segStart.getTime()) / dayMs) * 24 * CELL_HEIGHT,
-              CELL_HEIGHT / 2
-            );
+          {daySlotItems.map((item) => {
+            const { columnIndex: col, totalColumns: total } = dayLayout.get(item.key) ?? { columnIndex: 0, totalColumns: 1 };
             return (
               <div
-                key={event.id}
-                onClick={() => onEventClick(event)}
-                className={`absolute text-xs rounded px-2 py-0.5 overflow-hidden cursor-pointer ${calendarColors.event.block}`}
-                style={{ top: `${top}px`, height: `${height}px`, left: "56px", right: "4px" }}
+                key={item.key}
+                onClick={item.onClick}
+                className={`absolute text-xs rounded px-2 py-0.5 overflow-hidden cursor-pointer ${item.className}`}
+                style={{
+                  top: `${item.top}px`,
+                  height: `${item.height}px`,
+                  left: `calc(56px + ${col / total} * (100% - 60px))`,
+                  width: `calc((100% - 60px) / ${total} - 2px)`,
+                }}
               >
-                {event.title}
-              </div>
-            );
-          })}
-          {tasks.filter((t) => t.dueDate && isSameDay(new Date(t.dueDate), viewDate)).map((task) => {
-            const due = new Date(task.dueDate!);
-            const top = (due.getHours() + due.getMinutes() / 60) * CELL_HEIGHT;
-            return (
-              <div
-                key={task.id}
-                onClick={onTaskClick}
-                className={`absolute text-xs rounded px-2 py-0.5 overflow-hidden cursor-pointer ${calendarColors.task.block}`}
-                style={{ top: `${top}px`, height: `${CELL_HEIGHT / 2}px`, left: "56px", right: "4px" }}
-              >
-                {task.title}
-              </div>
-            );
-          })}
-          {reminders.filter((r) => r.scheduledTime && isSameDay(new Date(r.scheduledTime), viewDate)).map((reminder) => {
-            const scheduled = new Date(reminder.scheduledTime!);
-            const top = (scheduled.getHours() + scheduled.getMinutes() / 60) * CELL_HEIGHT;
-            return (
-              <div
-                key={reminder.id}
-                onClick={onReminderClick}
-                className={`absolute text-xs rounded px-2 py-0.5 overflow-hidden cursor-pointer ${calendarColors.reminder.block}`}
-                style={{ top: `${top}px`, height: `${CELL_HEIGHT / 2}px`, left: "56px", right: "4px" }}
-              >
-                {reminder.title}
+                {item.title}
               </div>
             );
           })}
