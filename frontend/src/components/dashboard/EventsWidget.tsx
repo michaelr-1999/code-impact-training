@@ -5,8 +5,15 @@ interface Props {
   events: DashboardEvent[];
 }
 
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+function formatEventTime(startIso: string, endIso: string) {
+  const s = new Date(startIso);
+  const e = new Date(endIso);
+  const sameDay = s.toDateString() === e.toDateString();
+  const time = (d: Date) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const date = (d: Date) => d.toLocaleDateString([], { month: "short", day: "numeric" });
+  return sameDay
+    ? `${time(s)} – ${time(e)}`
+    : `${date(s)}, ${time(s)} – ${date(e)}, ${time(e)}`;
 }
 
 export function EventsWidget({ events }: Props) {
@@ -35,7 +42,7 @@ export function EventsWidget({ events }: Props) {
             >
               <span className="text-sm font-medium text-gray-900 dark:text-white">{event.title}</span>
               <span className="text-xs text-gray-400 dark:text-gray-500">
-                {formatTime(event.startTime)} – {formatTime(event.endTime)}
+                {formatEventTime(event.startTime, event.endTime)}
               </span>
             </li>
           ))}
