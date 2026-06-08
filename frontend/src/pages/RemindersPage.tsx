@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   getAllReminders,
   getCategories,
@@ -12,6 +13,8 @@ import { ReminderItem } from "../components/reminders/ReminderItem";
 import { ReminderModal } from "../components/reminders/ReminderModal";
 
 export default function RemindersPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
   const [reminders, setReminders] = useState<ApiReminder[]>([]);
   const [categories, setCategories] = useState<ApiReminderCategory[]>([]);
   const [showCompleted, setShowCompleted] = useState(false);
@@ -20,12 +23,19 @@ export default function RemindersPage() {
 
   useEffect(() => {
     Promise.all([getAllReminders(), getCategories()])
-      .then(([r, c]) => {
-        setReminders(r);
-        setCategories(c);
-      })
+      .then(([r, c]) => { setReminders(r); setCategories(c); })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!editId || reminders.length === 0) return;
+    const reminder = reminders.find((r) => r.id === editId);
+    if (reminder) {
+      setEditReminder(reminder);
+      setModalOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [editId, reminders]);
 
   function openCreate() {
     setEditReminder(null);

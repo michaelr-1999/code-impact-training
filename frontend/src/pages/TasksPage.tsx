@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { getAllTasks, completeTask, incompleteTask, type ApiTask } from "../api/tasks";
 import { TaskList } from "../components/tasks/TaskList";
 import { TaskModal } from "../components/tasks/TaskModal";
 
 export default function TasksPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
   const [tasks, setTasks] = useState<ApiTask[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<ApiTask | null>(null);
@@ -11,6 +14,16 @@ export default function TasksPage() {
   useEffect(() => {
     getAllTasks(true).then(setTasks).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!editId || tasks.length === 0) return;
+    const task = tasks.find((t) => t.id === editId);
+    if (task) {
+      setEditingTask(task);
+      setModalOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [editId, tasks]);
 
   const now = new Date();
 
