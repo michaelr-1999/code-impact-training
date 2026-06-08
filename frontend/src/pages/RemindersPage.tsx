@@ -70,9 +70,14 @@ export default function RemindersPage() {
     }
   }
 
+  const now = new Date();
   const active = reminders.filter((r) => !r.isDone);
   const done = reminders.filter((r) => r.isDone);
-  const uncategorizedActive = active.filter((r) => r.categoryId === null);
+
+  const overdue = active.filter((r) => r.scheduledTime && new Date(r.scheduledTime) < now);
+  const overdueIds = new Set(overdue.map((r) => r.id));
+  const nonOverdueActive = active.filter((r) => !overdueIds.has(r.id));
+  const uncategorizedActive = nonOverdueActive.filter((r) => r.categoryId === null);
 
   return (
     <div className="p-4 sm:p-8 max-w-2xl">
@@ -94,11 +99,21 @@ export default function RemindersPage() {
         </div>
       </div>
 
+      {overdue.length > 0 && (
+        <CategorySection
+          name="Overdue"
+          reminders={overdue}
+          onToggle={handleToggle}
+          onEdit={openEdit}
+          variant="overdue"
+        />
+      )}
+
       {categories.map((cat) => (
         <CategorySection
           key={cat.id}
           name={cat.name}
-          reminders={active.filter((r) => r.categoryId === cat.id)}
+          reminders={nonOverdueActive.filter((r) => r.categoryId === cat.id)}
           onToggle={handleToggle}
           onEdit={openEdit}
         />

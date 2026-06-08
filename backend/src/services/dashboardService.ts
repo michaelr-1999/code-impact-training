@@ -57,7 +57,14 @@ export async function getDashboardToday(userId: string, tzOffsetMinutes = 0) {
     }),
 
     prisma.reminder.findMany({
-      where: { userId, scheduledTime: { gte: startOfDay, lte: endOfDay }, isDone: false },
+      where: {
+        userId,
+        isDone: false,
+        OR: [
+          { scheduledTime: { gte: startOfDay, lte: endOfDay } },
+          { scheduledTime: { lt: startOfDay } },
+        ],
+      },
       include: { category: true },
       orderBy: { scheduledTime: "asc" },
     }),
