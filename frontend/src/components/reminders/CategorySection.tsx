@@ -7,6 +7,7 @@ interface Props {
   reminders: ApiReminder[];
   onToggle: (reminder: ApiReminder) => void;
   onEdit: (reminder: ApiReminder) => void;
+  variant?: "overdue";
 }
 
 function sortByScheduledTime(reminders: ApiReminder[]): ApiReminder[] {
@@ -18,17 +19,18 @@ function sortByScheduledTime(reminders: ApiReminder[]): ApiReminder[] {
   });
 }
 
-export function CategorySection({ name, reminders, onToggle, onEdit }: Props) {
+export function CategorySection({ name, reminders, onToggle, onEdit, variant }: Props) {
   const [expanded, setExpanded] = useState(true);
   const sorted = sortByScheduledTime(reminders);
+  const isOverdue = variant === "overdue";
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-3">
+    <div className={`bg-white dark:bg-gray-900 rounded-xl border shadow-sm mb-3 ${isOverdue ? "border-red-400 dark:border-red-600" : "border-gray-200 dark:border-gray-700"}`}>
       <button
         onClick={() => setExpanded((v) => !v)}
         className="w-full flex items-center justify-between px-4 py-3 text-left"
       >
-        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{name}</span>
+        <span className={`text-sm font-semibold ${isOverdue ? "text-red-600 dark:text-red-400 animate-pulse" : "text-gray-700 dark:text-gray-300"}`}>{name}</span>
         <svg
           className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform ${expanded ? "rotate-180" : ""}`}
           fill="none"

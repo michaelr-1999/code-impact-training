@@ -12,8 +12,14 @@ export default function TasksPage() {
     getAllTasks(true).then(setTasks).catch(() => {});
   }, []);
 
+  const now = new Date();
+
+  const overdue = tasks
+    .filter(t => !t.completedAt && t.dueDate !== null && new Date(t.dueDate!) < now)
+    .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
+
   const incomplete = tasks
-    .filter(t => !t.completedAt && t.dueDate !== null)
+    .filter(t => !t.completedAt && t.dueDate !== null && new Date(t.dueDate!) >= now)
     .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
 
   const backlog = tasks
@@ -78,6 +84,15 @@ export default function TasksPage() {
           + Create task
         </button>
       </div>
+      {overdue.length > 0 && (
+        <TaskList
+          title="Overdue"
+          tasks={overdue}
+          emptyMessage=""
+          onToggle={handleToggle}
+          onEdit={openEdit}
+        />
+      )}
       <TaskList
         title="Incomplete"
         tasks={incomplete}

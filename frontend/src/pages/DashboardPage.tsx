@@ -3,6 +3,7 @@ import { getDashboardToday, postAiSummary, type DashboardData } from "../api/das
 import { EventsWidget } from "../components/dashboard/EventsWidget";
 import { TasksWidget } from "../components/dashboard/TasksWidget";
 import { RemindersWidget } from "../components/dashboard/RemindersWidget";
+import { OverdueWidget } from "../components/dashboard/OverdueWidget";
 import { AISummaryCard } from "../components/dashboard/AISummaryCard";
 
 function formatToday() {
@@ -33,6 +34,28 @@ export default function DashboardPage() {
   const [summary, setSummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
+
+  const overdueTasks = (() => {
+    if (!data) return [];
+    const t = new Date(); t.setHours(0, 0, 0, 0);
+    return data.tasks.filter(task => task.dueDate && new Date(task.dueDate) < t);
+  })();
+  const nonOverdueTasks = (() => {
+    if (!data) return [];
+    const t = new Date(); t.setHours(0, 0, 0, 0);
+    return data.tasks.filter(task => !task.dueDate || new Date(task.dueDate) >= t);
+  })();
+  const overdueReminders = (() => {
+    if (!data) return [];
+    const now = new Date();
+    return data.reminders.filter(r => r.scheduledTime && new Date(r.scheduledTime) < now);
+  })();
+  const nonOverdueReminders = (() => {
+    if (!data) return [];
+    const now = new Date();
+    return data.reminders.filter(r => !r.scheduledTime || new Date(r.scheduledTime) >= now);
+  })();
+  const hasOverdue = overdueTasks.length > 0 || overdueReminders.length > 0;
 
   useEffect(() => {
     getDashboardToday()
@@ -65,10 +88,15 @@ export default function DashboardPage() {
         </div>
       ) : data ? (
         <>
+          {hasOverdue && (
+            <div className="mb-4">
+              <OverdueWidget tasks={overdueTasks} reminders={overdueReminders} />
+            </div>
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <EventsWidget events={data.events} />
-            <TasksWidget tasks={data.tasks} />
-            <RemindersWidget reminders={data.reminders} />
+            <TasksWidget tasks={nonOverdueTasks} />
+            <RemindersWidget reminders={nonOverdueReminders} />
           </div>
 
           <div className="mt-4">
