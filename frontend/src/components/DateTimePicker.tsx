@@ -164,32 +164,33 @@ export function DateTimePicker({ value, onChange, accent = "blue" }: Props) {
       {/* Time inputs */}
       <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-center gap-2">
         <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Time</span>
-        <input
-          type="text"
-          inputMode="numeric"
-          value={String(hours12)}
+        <select
+          value={hours12}
           onChange={e => setHour12(e.target.value)}
-          className={`w-12 py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-xs text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${ac.ring}`}
-        />
-        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">:</span>
-        <input
-          type="text"
-          inputMode="numeric"
-          value={String(sel ? sel.getMinutes() : 0).padStart(2, "0")}
-          onChange={e => setMinute(e.target.value)}
-          className={`w-12 py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-xs text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${ac.ring}`}
-        />
-        <button
-          type="button"
-          onClick={toggleAmPm}
-          className={`w-10 py-1 rounded-lg text-xs font-semibold border transition-colors ${
-            isPM
-              ? "border-gray-400 dark:border-gray-500 bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-white"
-              : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-          }`}
+          className={`py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-xs text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${ac.ring}`}
         >
-          {isPM ? "PM" : "AM"}
-        </button>
+          {Array.from({ length: 12 }, (_, i) => i + 1).map(h => (
+            <option key={h} value={h}>{h}</option>
+          ))}
+        </select>
+        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">:</span>
+        <select
+          value={sel ? sel.getMinutes() : 0}
+          onChange={e => setMinute(e.target.value)}
+          className={`py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-xs text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${ac.ring}`}
+        >
+          {Array.from({ length: 12 }, (_, i) => i * 5).map(m => (
+            <option key={m} value={m}>{String(m).padStart(2, "0")}</option>
+          ))}
+        </select>
+        <select
+          value={isPM ? "PM" : "AM"}
+          onChange={e => { if ((e.target.value === "PM") !== isPM) toggleAmPm(); }}
+          className={`py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-xs text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 ${ac.ring}`}
+        >
+          <option value="AM">AM</option>
+          <option value="PM">PM</option>
+        </select>
       </div>
     </div>
   );
