@@ -1031,6 +1031,21 @@ export default function CalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [tasks, setTasks] = useState<ApiTask[]>([]);
   const [reminders, setReminders] = useState<ApiReminder[]>([]);
+  const [showJumpPicker, setShowJumpPicker] = useState(false);
+  const [jumpYear, setJumpYear] = useState(today.getFullYear());
+  const [jumpMonth, setJumpMonth] = useState<number | null>(null);
+  const jumpPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showJumpPicker) return;
+    function handleClick(e: MouseEvent) {
+      if (jumpPickerRef.current && !jumpPickerRef.current.contains(e.target as Node)) {
+        setShowJumpPicker(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showJumpPicker]);
 
   useEffect(() => {
     const { start, end } = getVisibleRange(view, viewDate);
@@ -1064,6 +1079,13 @@ export default function CalendarPage() {
     setEvents((prev) => [...prev, ...items]);
   }
 
+  const isTodayInView =
+    view === "day"
+      ? isSameDay(today, viewDate)
+      : view === "week"
+      ? (() => { const ws = startOfWeek(viewDate); const we = new Date(ws); we.setDate(ws.getDate() + 6); we.setHours(23, 59, 59, 999); return today >= ws && today <= we; })()
+      : today.getFullYear() === viewDate.getFullYear() && today.getMonth() === viewDate.getMonth();
+
   const views: { key: View; label: string }[] = [
     { key: "month", label: "Month" },
     { key: "week", label: "Week" },
@@ -1081,6 +1103,14 @@ export default function CalendarPage() {
           >
             + Create
           </button>
+          {!isTodayInView && (
+            <button
+              onClick={() => setViewDate(new Date())}
+              className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              Return to Today
+            </button>
+          )}
         </div>
 
         {/* View switcher */}
@@ -1112,9 +1142,105 @@ export default function CalendarPage() {
           >
             &#8249;
           </button>
-          <span className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
-            {headerLabel(view, viewDate)}
-          </span>
+          <div className="relative">
+            <button
+              onClick={() => { setJumpYear(viewDate.getFullYear()); setJumpMonth(null); setShowJumpPicker((v) => !v); }}
+              className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors px-2 py-1 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              {headerLabel(view, viewDate)}
+            </button>
+            {showJumpPicker && (
+              <div
+                ref={jumpPickerRef}
+                className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-3 w-56"
+              >
+                {view === "week" && jumpMonth !== null ? (
+                  /* Week picker — step 2 */
+                  <>
+                    <div className="flex items-center gap-2 mb-3">
+                      <button
+                        onClick={() => setJumpMonth(null)}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 text-lg leading-none"
+                      >
+                        &#8249;
+                      </button>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {MONTH_NAMES[jumpMonth]} {jumpYear}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      {(() => {
+                        const firstDay = new Date(jumpYear, jumpMonth, 1);
+                        const lastDay = new Date(jumpYear, jumpMonth + 1, 0);
+                        const ws = startOfWeek(firstDay);
+                        const weeks: Date[] = [];
+                        const d = new Date(ws);
+                        while (d <= lastDay) { weeks.push(new Date(d)); d.setDate(d.getDate() + 7); }
+                        const currentWeekStart = startOfWeek(viewDate);
+                        return weeks.map((weekStart) => {
+                          const weekEnd = new Date(weekStart);
+                          weekEnd.setDate(weekStart.getDate() + 6);
+                          const isCurrent = isSameDay(weekStart, currentWeekStart);
+                          const label = weekStart.getMonth() === weekEnd.getMonth()
+                            ? `${MONTH_NAMES[weekStart.getMonth()].slice(0, 3)} ${weekStart.getDate()}–${weekEnd.getDate()}`
+                            : `${MONTH_NAMES[weekStart.getMonth()].slice(0, 3)} ${weekStart.getDate()} – ${MONTH_NAMES[weekEnd.getMonth()].slice(0, 3)} ${weekEnd.getDate()}`;
+                          return (
+                            <button
+                              key={weekStart.toISOString()}
+                              onClick={() => { setViewDate(new Date(weekStart)); setShowJumpPicker(false); }}
+                              className={`px-3 py-2 text-sm rounded-lg text-left transition-colors ${isCurrent ? "bg-blue-600 text-white font-medium" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}`}
+                            >
+                              {label}
+                            </button>
+                          );
+                        });
+                      })()}
+                    </div>
+                  </>
+                ) : (
+                  /* Month picker — step 1 (always shown for month/day view; shown first for week view) */
+                  <>
+                    <div className="flex items-center justify-between mb-3">
+                      <button
+                        onClick={() => setJumpYear((y) => y - 1)}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 text-lg leading-none"
+                      >
+                        &#8249;
+                      </button>
+                      <span className="font-semibold text-gray-900 dark:text-white">{jumpYear}</span>
+                      <button
+                        onClick={() => setJumpYear((y) => y + 1)}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 text-lg leading-none"
+                      >
+                        &#8250;
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1">
+                      {MONTH_NAMES.map((name, i) => {
+                        const isCurrent = jumpYear === viewDate.getFullYear() && i === viewDate.getMonth();
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => {
+                              if (view === "week") {
+                                setJumpMonth(i);
+                              } else {
+                                setViewDate(new Date(jumpYear, i, 1));
+                                setShowJumpPicker(false);
+                              }
+                            }}
+                            className={`px-1 py-2 text-sm rounded-lg transition-colors ${isCurrent ? "bg-blue-600 text-white font-medium" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}`}
+                          >
+                            {name.slice(0, 3)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
           <button
             onClick={() => setViewDate(navDate(view, viewDate, 1))}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors text-xl leading-none"
