@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { AlertTriangle } from "lucide-react";
 import type { DashboardTask, DashboardReminder } from "../../api/dashboard";
 
 interface Props {
@@ -16,13 +17,22 @@ function formatTime(iso: string) {
 
 export function OverdueWidget({ tasks, reminders }: Props) {
   const navigate = useNavigate();
+  const total = tasks.length + reminders.length;
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl border border-red-400 dark:border-red-600 shadow-sm p-4">
-      <h2 className="text-sm font-semibold text-red-600 dark:text-red-400 animate-pulse uppercase tracking-wide mb-3">
-        Overdue
-      </h2>
-      <ul className="space-y-2">
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-red-200 dark:border-red-900 shadow-sm overflow-hidden">
+      <div className="flex items-center gap-2.5 px-4 py-3 bg-red-50 dark:bg-red-950/40 border-b border-red-100 dark:border-red-900">
+        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shrink-0">
+          <AlertTriangle size={14} className="text-white" strokeWidth={2.5} />
+        </div>
+        <h2 className="text-sm font-semibold text-red-700 dark:text-red-400 uppercase tracking-wide">
+          Overdue
+        </h2>
+        <span className="ml-auto text-xs font-bold text-white bg-red-500 dark:bg-red-600 min-w-[20px] h-5 flex items-center justify-center rounded-full px-1.5">
+          {total}
+        </span>
+      </div>
+      <ul className="space-y-1 p-2">
         {tasks.map((task) => (
           <li
             key={`task-${task.id}`}

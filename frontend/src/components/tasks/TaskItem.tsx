@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import type { ApiTask } from "../../api/tasks";
 
 function formatDate(iso: string) {
@@ -14,7 +15,17 @@ export function TaskItem({ task, onToggle, onEdit }: Props) {
   const done = !!task.completedAt;
   const overdue = !done && !!task.dueDate && new Date(task.dueDate) < new Date();
   return (
-    <div className="flex items-start gap-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3">
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -16 }}
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.18 }}
+      className={`flex items-start gap-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 border-l-[3px] rounded-lg px-4 py-3 hover:shadow-md transition-shadow duration-150 ${
+        done ? "border-l-gray-300 dark:border-l-gray-600 opacity-60" : overdue ? "border-l-red-500 dark:border-l-red-400" : "border-l-green-500 dark:border-l-green-400"
+      }`}
+    >
       <input
         type="checkbox"
         checked={done}
@@ -38,6 +49,6 @@ export function TaskItem({ task, onToggle, onEdit }: Props) {
           <p className="text-xs text-gray-400 dark:text-gray-500">Completed {formatDate(task.completedAt)}</p>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

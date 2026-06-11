@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { User } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { getMe, putProfile, putPassword } from "../api/auth";
+import { PageHeader } from "../components/PageHeader";
 
 type User = { id: string; name: string; email: string; avatarUrl?: string | null };
 
@@ -221,61 +223,65 @@ export default function ProfilePage() {
   return (
     <>
     <div className="p-4 sm:p-8 max-w-lg space-y-4">
-      <div className="mb-2 flex items-center gap-3">
-        <button
-          onClick={toggleTheme}
-          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-moss transition-colors"
-        >
-          {isDark ? (
-            <>
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-              Light
-            </>
-          ) : (
-            <>
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-              Dark
-            </>
-          )}
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profile</h1>
-      </div>
+      <PageHeader
+        icon={User}
+        gradient="from-slate-500 to-gray-700"
+        title="Profile"
+        actions={
+          <button
+            onClick={toggleTheme}
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300 transition-colors"
+          >
+            {isDark ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                Light mode
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+                Dark mode
+              </>
+            )}
+          </button>
+        }
+      />
 
       {/* Profile card */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
         {!editing ? (
           <>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+            <div className="h-20 bg-gradient-to-r from-slate-500 to-gray-700" />
+            <div className="px-6 pb-6">
+              <div className="flex items-end justify-between -mt-8 mb-3">
                 {user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="Profile" className="w-14 h-14 rounded-full object-cover shrink-0" />
+                  <img src={user.avatarUrl} alt="Profile" className="w-16 h-16 rounded-full object-cover ring-2 ring-white dark:ring-gray-900 shrink-0" />
                 ) : (
-                  <div className="w-14 h-14 rounded-full bg-blue-100 dark:bg-moss-subtle flex items-center justify-center shrink-0">
-                    <span className="text-lg font-semibold text-blue-700 dark:text-moss">{initials}</span>
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center ring-2 ring-white dark:ring-gray-900 shrink-0">
+                    <span className="text-xl font-bold text-white">{initials}</span>
                   </div>
                 )}
-                <div>
-                  <p className="text-base font-semibold text-gray-900 dark:text-white">{user.name}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{user.email}</p>
-                </div>
+                <button
+                  onClick={startEditing}
+                  className="mb-1 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-moss dark:hover:text-moss-hover"
+                >
+                  Edit profile
+                </button>
               </div>
-              <button
-                onClick={startEditing}
-                className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-moss dark:hover:text-moss-hover"
-              >
-                Edit profile
-              </button>
+              <p className="text-lg font-bold text-gray-900 dark:text-white leading-tight">{user.name}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{user.email}</p>
+              {profileSuccess && (
+                <p className="mt-3 text-sm text-green-600 dark:text-moss">{profileSuccess}</p>
+              )}
             </div>
-            {profileSuccess && (
-              <p className="mt-3 text-sm text-green-600 dark:text-moss">{profileSuccess}</p>
-            )}
           </>
         ) : (
+          <div className="p-6">
           <div className="space-y-3">
             <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Edit profile</h2>
             <div>
@@ -313,6 +319,7 @@ export default function ProfilePage() {
               </button>
             </div>
           </div>
+          </div>
         )}
       </div>
 
@@ -329,8 +336,8 @@ export default function ProfilePage() {
                 className="w-20 h-20 rounded-full object-cover"
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-blue-100 dark:bg-moss-subtle flex items-center justify-center">
-                <span className="text-2xl font-semibold text-blue-700 dark:text-moss">{initials}</span>
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
+                <span className="text-2xl font-bold text-white">{initials}</span>
               </div>
             )}
             <button

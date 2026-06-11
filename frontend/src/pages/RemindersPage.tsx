@@ -1,5 +1,26 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { Bell } from "lucide-react";
+import { PageHeader } from "../components/PageHeader";
+import { useToast } from "../context/ToastContext";
+
+function RemindersSkeleton() {
+  return (
+    <div className="animate-pulse space-y-3">
+      {([2, 3] as const).map((count, i) => (
+        <div key={i} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+          <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded w-28 mb-4" />
+          <div className="space-y-2">
+            {Array.from({ length: count }).map((_, j) => (
+              <div key={j} className="h-8 bg-gray-100 dark:bg-gray-800 rounded" />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 import {
   getAllReminders,
   getCategories,
@@ -18,8 +39,10 @@ export default function RemindersPage() {
   const [reminders, setReminders] = useState<ApiReminder[]>([]);
   const [categories, setCategories] = useState<ApiReminderCategory[]>([]);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editReminder, setEditReminder] = useState<ApiReminder | null>(null);
+  const toast = useToast();
 
   useEffect(() => {
     const targetId = editId;
@@ -36,7 +59,8 @@ export default function RemindersPage() {
           }
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -56,14 +80,17 @@ export default function RemindersPage() {
       if (idx >= 0) return prev.map((r) => (r.id === reminder.id ? reminder : r));
       return [reminder, ...prev];
     });
+    toast("Reminder saved");
   }
 
   function handleDelete(id: string) {
     setReminders((prev) => prev.filter((r) => r.id !== id));
+    toast("Reminder deleted", "info");
   }
 
   function handleDeleteSeries(seriesId: string) {
     setReminders((prev) => prev.filter((r) => r.seriesId !== seriesId));
+    toast("Series deleted", "info");
   }
 
   async function handleToggle(reminder: ApiReminder) {
@@ -71,6 +98,7 @@ export default function RemindersPage() {
     setReminders((prev) =>
       prev.map((r) => (r.id === reminder.id ? { ...r, isDone: !wasDone } : r))
     );
+    toast(wasDone ? "Reminder marked undone" : "Reminder done");
     try {
       const updated = wasDone
         ? await markReminderUndone(reminder.id)
@@ -94,24 +122,29 @@ export default function RemindersPage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-2xl">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Reminders</h1>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setShowCompleted((v) => !v)}
-            className="text-sm text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400 font-medium"
-          >
-            {showCompleted ? "Hide completed" : "Show completed"}
-          </button>
-          <button
-            onClick={openCreate}
-            className="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition-colors"
-          >
-            Create reminder
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        icon={Bell}
+        gradient="from-amber-400 to-orange-500"
+        title="Reminders"
+        actions={
+          <>
+            <button
+              onClick={() => setShowCompleted((v) => !v)}
+              className="text-sm text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400 font-medium transition-colors"
+            >
+              {showCompleted ? "Hide completed" : "Show completed"}
+            </button>
+            <button
+              onClick={openCreate}
+              className="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 transition-colors"
+            >
+              Create reminder
+            </button>
+          </>
+        }
+      />
 
+      {loading ? <RemindersSkeleton /> : <>
       {overdue.length > 0 && (
         <CategorySection
           name="Overdue"
@@ -140,6 +173,7 @@ export default function RemindersPage() {
           onEdit={openEdit}
         />
       )}
+      </>}
 
       {showCompleted && (
         <div className="mt-6">
@@ -158,17 +192,19 @@ export default function RemindersPage() {
         </div>
       )}
 
-      {modalOpen && (
-        <ReminderModal
-          reminder={editReminder}
-          categories={categories}
-          onClose={() => setModalOpen(false)}
-          onSave={handleSave}
-          onDelete={handleDelete}
-          onDeleteSeries={handleDeleteSeries}
-          onCategoriesChange={setCategories}
-        />
-      )}
+      <AnimatePresence>
+        {modalOpen && (
+          <ReminderModal
+            reminder={editReminder}
+            categories={categories}
+            onClose={() => setModalOpen(false)}
+            onSave={handleSave}
+            onDelete={handleDelete}
+            onDeleteSeries={handleDeleteSeries}
+            onCategoriesChange={setCategories}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

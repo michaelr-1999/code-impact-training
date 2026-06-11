@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { LayoutDashboard, CalendarDays, ListTodo, Bell } from "lucide-react";
 import { getDashboardToday, postAiSummary, type DashboardData } from "../api/dashboard";
 import { EventsWidget } from "../components/dashboard/EventsWidget";
 import { TasksWidget } from "../components/dashboard/TasksWidget";
 import { RemindersWidget } from "../components/dashboard/RemindersWidget";
 import { OverdueWidget } from "../components/dashboard/OverdueWidget";
 import { AISummaryCard } from "../components/dashboard/AISummaryCard";
+import { PageHeader } from "../components/PageHeader";
 
 function formatToday() {
   return new Date().toLocaleDateString("en-US", {
@@ -13,6 +15,65 @@ function formatToday() {
     month: "long",
     day: "numeric",
   });
+}
+
+function useCountUp(target: number, duration = 700) {
+  const [current, setCurrent] = useState(0);
+  const rafRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (target === 0) { setCurrent(0); return; }
+    const start = performance.now();
+    function step(now: number) {
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setCurrent(Math.round(eased * target));
+      if (p < 1) rafRef.current = requestAnimationFrame(step);
+    }
+    rafRef.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [target, duration]);
+
+  return current;
+}
+
+interface StatCardProps {
+  label: string;
+  count: number;
+  icon: typeof LayoutDashboard;
+  gradient: string;
+  countColor: string;
+}
+
+function StatCard({ label, count, icon: Icon, gradient, countColor }: StatCardProps) {
+  const animated = useCountUp(count);
+  return (
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 flex items-center gap-3">
+      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center shrink-0`}>
+        <Icon size={17} className="text-white" strokeWidth={2} />
+      </div>
+      <div>
+        <p className={`text-2xl font-bold leading-none ${countColor}`}>{animated}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+function StatsRowSkeleton() {
+  return (
+    <div className="grid grid-cols-3 gap-4 mb-4 animate-pulse">
+      {[0, 1, 2].map(i => (
+        <div key={i} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-800 shrink-0" />
+          <div className="flex-1">
+            <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-6 mb-1.5" />
+            <div className="h-2.5 bg-gray-200 dark:bg-gray-800 rounded w-20" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function WidgetSkeleton() {
@@ -75,19 +136,29 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{formatToday()}</p>
-      </div>
+      <PageHeader
+        icon={LayoutDashboard}
+        gradient="from-blue-500 to-violet-600"
+        title="Dashboard"
+        subtitle={formatToday()}
+      />
 
       {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <WidgetSkeleton />
-          <WidgetSkeleton />
-          <WidgetSkeleton />
-        </div>
+        <>
+          <StatsRowSkeleton />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <WidgetSkeleton />
+            <WidgetSkeleton />
+            <WidgetSkeleton />
+          </div>
+        </>
       ) : data ? (
         <>
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <StatCard label="Events today" count={data.events.length} icon={CalendarDays} gradient="from-blue-500 to-blue-600" countColor="text-blue-600 dark:text-blue-400" />
+            <StatCard label="Tasks due" count={data.tasks.length} icon={ListTodo} gradient="from-green-500 to-emerald-600" countColor="text-green-600 dark:text-green-400" />
+            <StatCard label="Reminders" count={data.reminders.length} icon={Bell} gradient="from-amber-400 to-orange-500" countColor="text-amber-500 dark:text-amber-400" />
+          </div>
           {hasOverdue && (
             <div className="mb-4">
               <OverdueWidget tasks={overdueTasks} reminders={overdueReminders} />
