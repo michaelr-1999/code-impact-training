@@ -22,7 +22,6 @@ function useCountUp(target: number, duration = 700) {
   const rafRef = useRef<number>(0);
 
   useEffect(() => {
-    if (target === 0) { setCurrent(0); return; }
     const start = performance.now();
     function step(now: number) {
       const p = Math.min((now - start) / duration, 1);
