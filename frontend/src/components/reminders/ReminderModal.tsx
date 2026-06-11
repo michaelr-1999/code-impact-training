@@ -34,7 +34,7 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
   const isSeries = isEdit && reminder.seriesId !== null;
   const [title, setTitle] = useState(reminder?.title ?? "");
   const [scheduledTime, setScheduledTime] = useState(
-    reminder?.scheduledTime ? toDateTimeLocal(reminder.scheduledTime) : ""
+    reminder?.scheduledTime ? toDateTimeLocal(reminder.scheduledTime) : reminder === null ? toDateTimeLocal(new Date(Math.ceil(Date.now() / 3600000) * 3600000).toISOString()) : ""
   );
   const [categoryId, setCategoryId] = useState(reminder?.categoryId ?? "");
   const [repeats, setRepeats] = useState(false);
