@@ -33,9 +33,11 @@ export function TaskModal({ task, onClose, onSave, onDelete, onDeleteSeries }: P
   const isSeries = isEdit && task.seriesId !== null;
   const [title, setTitle] = useState(task?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
-  const [dueDate, setDueDate] = useState(
-    task?.dueDate ? toDateTimeLocal(new Date(task.dueDate)) : task === null ? toDateTimeLocal(new Date(Math.ceil(Date.now() / 3600000) * 3600000)) : ""
-  );
+  const [dueDate, setDueDate] = useState(() => {
+    if (task?.dueDate) return toDateTimeLocal(new Date(task.dueDate));
+    if (task === null) return toDateTimeLocal(new Date(Math.ceil(Date.now() / 3600000) * 3600000));
+    return "";
+  });
   const [repeats, setRepeats] = useState(false);
   const [repeatCount, setRepeatCount] = useState(isSeries ? 1 : 2);
   const [repeatInterval, setRepeatInterval] = useState(task?.repeatInterval ?? 1);
