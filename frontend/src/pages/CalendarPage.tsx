@@ -59,12 +59,14 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
   onClose: () => void;
   onSubmit: (data: { title: string; description: string; start: string; end: string; repeatInterval?: number; repeatUnit?: string; repeatCount?: number; repeatDays?: number[]; timezoneOffset?: number }) => Promise<void>;
 }) {
-  const defaultStart = new Date(defaultDate);
-  defaultStart.setHours(9, 0, 0, 0);
-
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [start, setStart] = useState(toDateTimeLocal(defaultStart));
+  const [start, setStart] = useState(() => {
+    const nextHour = new Date(Math.ceil(Date.now() / 3600000) * 3600000);
+    const d = new Date(defaultDate);
+    d.setHours(nextHour.getHours(), 0, 0, 0);
+    return toDateTimeLocal(d);
+  });
   const [durationMinutes, setDurationMinutes] = useState(0);
   const [durationHours, setDurationHours] = useState(0);
   const [durationDays, setDurationDays] = useState(0);
