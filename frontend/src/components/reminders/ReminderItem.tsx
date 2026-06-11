@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import type { ApiReminder } from "../../api/reminders";
 
 interface Props {
@@ -14,7 +15,16 @@ function formatTime(iso: string | null) {
 export function ReminderItem({ reminder, onToggle, onEdit }: Props) {
   const time = formatTime(reminder.scheduledTime);
   return (
-    <div className="flex items-center gap-3 py-2">
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -16 }}
+      transition={{ duration: 0.18 }}
+      className={`flex items-center gap-3 py-2 pl-2 border-l-[3px] rounded-r-sm transition-colors duration-150 hover:bg-amber-50 dark:hover:bg-amber-900/10 ${
+        reminder.isDone ? "border-l-gray-200 dark:border-l-gray-700" : "border-l-amber-400 dark:border-l-amber-500"
+      }`}
+    >
       <input
         type="checkbox"
         checked={reminder.isDone}
@@ -29,6 +39,6 @@ export function ReminderItem({ reminder, onToggle, onEdit }: Props) {
         {reminder.title}
       </button>
       {time && <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">{time}</span>}
-    </div>
+    </motion.div>
   );
 }

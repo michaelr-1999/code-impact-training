@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, type FormEvent } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { CalendarDays } from "lucide-react";
 import { createEvent, updateEvent, deleteEvent, deleteEventSeries, type ApiEvent } from "../api/events";
 import { DateTimePicker } from "../components/DateTimePicker";
 import type { ApiTask } from "../api/tasks";
@@ -32,6 +34,10 @@ function isSameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate();
+}
+
+function formatBlockTime(date: Date) {
+  return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
 function toDateTimeLocal(date: Date) {
@@ -113,9 +119,21 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
+    >
       <div className="absolute inset-0 bg-black/40" />
-      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <motion.div
+        className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+        initial={{ scale: 0.95, y: 16 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.95, y: 16 }}
+        transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Create event</h2>
           <button
@@ -149,6 +167,7 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
+          <hr className="border-t border-gray-100 dark:border-gray-700" />
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Start <span className="text-red-500">*</span>
@@ -180,6 +199,7 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
               ))}
             </div>
           </div>
+          <hr className="border-t border-gray-100 dark:border-gray-700" />
           <div>
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
@@ -271,8 +291,8 @@ function CreateEventModal({ defaultDate, onClose, onSubmit }: {
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -384,9 +404,21 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onDeleteSeries, on
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
+    >
       <div className="absolute inset-0 bg-black/40" />
-      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <motion.div
+        className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+        initial={{ scale: 0.95, y: 16 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.95, y: 16 }}
+        transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Edit event</h2>
           <button
@@ -418,6 +450,7 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onDeleteSeries, on
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
+          <hr className="border-t border-gray-100 dark:border-gray-700" />
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Start <span className="text-red-500">*</span>
@@ -449,6 +482,7 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onDeleteSeries, on
               ))}
             </div>
           </div>
+          <hr className="border-t border-gray-100 dark:border-gray-700" />
           {isSeries && (
             <div>
               <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -593,8 +627,8 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onDeleteSeries, on
             )}
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -649,7 +683,7 @@ function MonthView({ viewDate, today, events, tasks, reminders, onDayClick, onEv
               onClick={() => cell.currentMonth && onDayClick(cellDate)}
               className={`
                 min-h-[44px] sm:min-h-[72px] p-1 sm:p-2 border-b border-r border-gray-100 dark:border-gray-800
-                ${!cell.currentMonth ? "bg-gray-50 dark:bg-gray-800" : "bg-white dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-gray-800 cursor-pointer"}
+                ${!cell.currentMonth ? "bg-gray-50 dark:bg-gray-800" : isToday ? "bg-blue-50/60 dark:bg-blue-950/30 hover:bg-blue-100/60 dark:hover:bg-blue-900/30 cursor-pointer" : "bg-white dark:bg-gray-900 hover:bg-blue-50 dark:hover:bg-gray-800 cursor-pointer"}
                 ${i % 7 === 6 ? "border-r-0" : ""}
               `}
             >
@@ -716,9 +750,6 @@ function useCurrentTime() {
   return new Date(); // called during render — always accurate
 }
 
-function minuteOffset() {
-  return (new Date().getMinutes() / 60) * CELL_HEIGHT;
-}
 
 function computeOverlapLayout(
   items: { key: string; top: number; height: number }[]
@@ -790,8 +821,8 @@ function WeekView({ viewDate, today, events, tasks, reminders, onEventClick, onT
         {days.map((day, i) => {
           const isToday = isSameDay(day, today);
           return (
-            <div key={i} className="py-2 text-center border-r border-gray-200 dark:border-gray-700 last:border-r-0">
-              <div className="text-xs text-gray-500 dark:text-gray-400 uppercase">{DAYS_OF_WEEK_SHORT[day.getDay()]}</div>
+            <div key={i} className={`py-2 text-center border-r border-gray-200 dark:border-gray-700 last:border-r-0 ${isToday ? "bg-blue-50/50 dark:bg-blue-950/20" : ""}`}>
+              <div className={`text-xs uppercase font-medium ${isToday ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`}>{DAYS_OF_WEEK_SHORT[day.getDay()]}</div>
               <div className={`
                 mx-auto mt-0.5 w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium
                 ${isToday ? "bg-blue-600 text-white" : "text-gray-900 dark:text-white"}
@@ -804,15 +835,15 @@ function WeekView({ viewDate, today, events, tasks, reminders, onEventClick, onT
       </div>
 
       {/* Time grid — default window 8am–8pm (12 rows visible), full 24h scrollable */}
-      <div ref={scrollRef} className="overflow-y-auto" style={{ height: `${12 * CELL_HEIGHT}px` }}>
+      <div ref={scrollRef} className="overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full" style={{ height: `${12 * CELL_HEIGHT}px` }}>
         <div className="relative">
           {HOURS.map((hour) => (
             <div key={hour} className="grid border-b border-gray-100 dark:border-gray-800" style={{ gridTemplateColumns: "56px repeat(7, 1fr)", height: `${CELL_HEIGHT}px` }}>
               <div className="pr-2 pb-2 text-right text-xs text-gray-400 dark:text-gray-500 border-r border-gray-200 dark:border-gray-700 leading-none">
                 {formatHour(hour)}
               </div>
-              {days.map((_, i) => (
-                <div key={i} className="border-r border-gray-100 dark:border-gray-800 last:border-r-0" />
+              {days.map((day, i) => (
+                <div key={i} className={`border-r border-gray-100 dark:border-gray-800 last:border-r-0 ${isSameDay(day, today) ? "bg-blue-50/30 dark:bg-blue-900/5" : ""}`} />
               ))}
             </div>
           ))}
@@ -822,7 +853,7 @@ function WeekView({ viewDate, today, events, tasks, reminders, onEventClick, onT
             const dayEnd = new Date(dayStart);
             dayEnd.setDate(dayStart.getDate() + 1);
             const dayMs = 86400000;
-            const slotItems: { key: string; top: number; height: number; title: string; onClick: () => void; className: string }[] = [];
+            const slotItems: { key: string; top: number; height: number; title: string; time: string; onClick: () => void; className: string }[] = [];
             for (const event of events) {
               const s = new Date(event.startTime), e = new Date(event.endTime);
               if (e <= dayStart || s >= dayEnd) continue;
@@ -830,19 +861,19 @@ function WeekView({ viewDate, today, events, tasks, reminders, onEventClick, onT
               const segE = e < dayEnd ? e : dayEnd;
               const top = ((segS.getTime() - dayStart.getTime()) / dayMs) * 24 * CELL_HEIGHT;
               const height = Math.max(((segE.getTime() - segS.getTime()) / dayMs) * 24 * CELL_HEIGHT, CELL_HEIGHT / 2);
-              slotItems.push({ key: `e-${event.id}-${dayIndex}`, top, height, title: event.title, onClick: () => onEventClick(event), className: calendarColors.event.block });
+              slotItems.push({ key: `e-${event.id}-${dayIndex}`, top, height, title: event.title, time: formatBlockTime(s), onClick: () => onEventClick(event), className: calendarColors.event.block });
             }
             for (const task of tasks) {
               if (!task.dueDate || !isSameDay(new Date(task.dueDate), day)) continue;
               const due = new Date(task.dueDate);
               const top = (due.getHours() + due.getMinutes() / 60) * CELL_HEIGHT;
-              slotItems.push({ key: `t-${task.id}-${dayIndex}`, top, height: CELL_HEIGHT / 2, title: task.title, onClick: () => onTaskClick(task), className: calendarColors.task.block });
+              slotItems.push({ key: `t-${task.id}-${dayIndex}`, top, height: CELL_HEIGHT / 2, title: task.title, time: formatBlockTime(due), onClick: () => onTaskClick(task), className: calendarColors.task.block });
             }
             for (const reminder of reminders) {
               if (!reminder.scheduledTime || !isSameDay(new Date(reminder.scheduledTime), day)) continue;
               const scheduled = new Date(reminder.scheduledTime);
               const top = (scheduled.getHours() + scheduled.getMinutes() / 60) * CELL_HEIGHT;
-              slotItems.push({ key: `r-${reminder.id}-${dayIndex}`, top, height: CELL_HEIGHT / 2, title: reminder.title, onClick: () => onReminderClick(reminder), className: calendarColors.reminder.block });
+              slotItems.push({ key: `r-${reminder.id}-${dayIndex}`, top, height: CELL_HEIGHT / 2, title: reminder.title, time: formatBlockTime(scheduled), onClick: () => onReminderClick(reminder), className: calendarColors.reminder.block });
             }
             const layout = computeOverlapLayout(slotItems);
             return slotItems.map((item) => {
@@ -859,7 +890,10 @@ function WeekView({ viewDate, today, events, tasks, reminders, onEventClick, onT
                     width: `calc((100% - 56px) / ${7 * total} - 2px)`,
                   }}
                 >
-                  {item.title}
+                  <div className="font-medium leading-tight truncate">{item.title}</div>
+                  {item.height >= CELL_HEIGHT && (
+                    <div className="opacity-75 leading-tight truncate">{item.time}</div>
+                  )}
                 </div>
               );
             });
@@ -876,7 +910,6 @@ function DayView({ viewDate, today, events, tasks, reminders, onEventClick, onTa
   const isToday = isSameDay(viewDate, today);
   const now = useCurrentTime();
   const currentHour = now.getHours();
-  const offset = minuteOffset();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -891,7 +924,7 @@ function DayView({ viewDate, today, events, tasks, reminders, onEventClick, onTa
   const dayEnd = new Date(dayStart);
   dayEnd.setDate(dayStart.getDate() + 1);
   const dayMs = 86400000;
-  const daySlotItems: { key: string; top: number; height: number; title: string; onClick: () => void; className: string }[] = [];
+  const daySlotItems: { key: string; top: number; height: number; title: string; time: string; onClick: () => void; className: string }[] = [];
   for (const event of events) {
     const s = new Date(event.startTime), e = new Date(event.endTime);
     if (e <= dayStart || s >= dayEnd) continue;
@@ -899,19 +932,19 @@ function DayView({ viewDate, today, events, tasks, reminders, onEventClick, onTa
     const segE = e < dayEnd ? e : dayEnd;
     const top = ((segS.getTime() - dayStart.getTime()) / dayMs) * 24 * CELL_HEIGHT;
     const height = Math.max(((segE.getTime() - segS.getTime()) / dayMs) * 24 * CELL_HEIGHT, CELL_HEIGHT / 2);
-    daySlotItems.push({ key: `e-${event.id}`, top, height, title: event.title, onClick: () => onEventClick(event), className: calendarColors.event.block });
+    daySlotItems.push({ key: `e-${event.id}`, top, height, title: event.title, time: formatBlockTime(s), onClick: () => onEventClick(event), className: calendarColors.event.block });
   }
   for (const task of tasks) {
     if (!task.dueDate || !isSameDay(new Date(task.dueDate), viewDate)) continue;
     const due = new Date(task.dueDate);
     const top = (due.getHours() + due.getMinutes() / 60) * CELL_HEIGHT;
-    daySlotItems.push({ key: `t-${task.id}`, top, height: CELL_HEIGHT / 2, title: task.title, onClick: () => onTaskClick(task), className: calendarColors.task.block });
+    daySlotItems.push({ key: `t-${task.id}`, top, height: CELL_HEIGHT / 2, title: task.title, time: formatBlockTime(due), onClick: () => onTaskClick(task), className: calendarColors.task.block });
   }
   for (const reminder of reminders) {
     if (!reminder.scheduledTime || !isSameDay(new Date(reminder.scheduledTime), viewDate)) continue;
     const scheduled = new Date(reminder.scheduledTime);
     const top = (scheduled.getHours() + scheduled.getMinutes() / 60) * CELL_HEIGHT;
-    daySlotItems.push({ key: `r-${reminder.id}`, top, height: CELL_HEIGHT / 2, title: reminder.title, onClick: () => onReminderClick(reminder), className: calendarColors.reminder.block });
+    daySlotItems.push({ key: `r-${reminder.id}`, top, height: CELL_HEIGHT / 2, title: reminder.title, time: formatBlockTime(scheduled), onClick: () => onReminderClick(reminder), className: calendarColors.reminder.block });
   }
   const dayLayout = computeOverlapLayout(daySlotItems);
 
@@ -932,7 +965,7 @@ function DayView({ viewDate, today, events, tasks, reminders, onEventClick, onTa
       </div>
 
       {/* Time grid — scrolls to current hour on open */}
-      <div ref={scrollRef} className="overflow-y-auto" style={{ height: `${12 * CELL_HEIGHT}px` }}>
+      <div ref={scrollRef} className="overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full" style={{ height: `${12 * CELL_HEIGHT}px` }}>
         <div className="relative">
           {HOURS.map((hour) => {
             const isCurrentHour = isToday && hour === currentHour;
@@ -942,17 +975,6 @@ function DayView({ viewDate, today, events, tasks, reminders, onEventClick, onTa
                   {formatHour(hour)}
                 </div>
                 <div className="flex-1" />
-                {isCurrentHour && (
-                  <div
-                    className="absolute left-0 right-0 flex items-center pointer-events-none"
-                    style={{ top: `${offset}px` }}
-                  >
-                    <div className="w-14 shrink-0 flex justify-end pr-1">
-                      <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                    </div>
-                    <div className="flex-1 h-px bg-red-500" />
-                  </div>
-                )}
               </div>
             );
           })}
@@ -970,7 +992,10 @@ function DayView({ viewDate, today, events, tasks, reminders, onEventClick, onTa
                   width: `calc((100% - 60px) / ${total} - 2px)`,
                 }}
               >
-                {item.title}
+                <div className="font-medium leading-tight truncate">{item.title}</div>
+                {item.height >= CELL_HEIGHT && (
+                  <div className="opacity-75 leading-tight truncate">{item.time}</div>
+                )}
               </div>
             );
           })}
@@ -1108,6 +1133,9 @@ export default function CalendarPage() {
     <div className="p-4 sm:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
         <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shrink-0 shadow-sm">
+            <CalendarDays size={19} className="text-white" strokeWidth={2} />
+          </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Calendar</h1>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -1267,24 +1295,28 @@ export default function CalendarPage() {
         {view === "day" && <DayView viewDate={viewDate} today={today} events={events} tasks={tasks} reminders={reminders} onEventClick={setSelectedEvent} onTaskClick={(task) => navigate(`/tasks?edit=${task.id}`)} onReminderClick={(reminder) => navigate(`/reminders?edit=${reminder.id}`)} />}
       </div>
 
-      {showCreateModal && (
-        <CreateEventModal
-          defaultDate={viewDate}
-          onClose={() => setShowCreateModal(false)}
-          onSubmit={handleSubmit}
-        />
-      )}
+      <AnimatePresence>
+        {showCreateModal && (
+          <CreateEventModal
+            defaultDate={viewDate}
+            onClose={() => setShowCreateModal(false)}
+            onSubmit={handleSubmit}
+          />
+        )}
+      </AnimatePresence>
 
-      {selectedEvent && (
-        <EventDetailModal
-          event={selectedEvent}
-          onClose={() => setSelectedEvent(null)}
-          onSave={handleSave}
-          onDelete={handleDelete}
-          onDeleteSeries={handleDeleteSeries}
-          onAddMore={handleAddMore}
-        />
-      )}
+      <AnimatePresence>
+        {selectedEvent && (
+          <EventDetailModal
+            event={selectedEvent}
+            onClose={() => setSelectedEvent(null)}
+            onSave={handleSave}
+            onDelete={handleDelete}
+            onDeleteSeries={handleDeleteSeries}
+            onAddMore={handleAddMore}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, type FormEvent } from "react";
+import { motion } from "framer-motion";
 import {
   createReminder,
   updateReminder,
@@ -172,9 +173,21 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
   const userCategories = categories.filter((c) => c.userId !== null);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
+    >
       <div className="absolute inset-0 bg-black/40" />
-      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <motion.div
+        className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+        initial={{ scale: 0.95, y: 16 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.95, y: 16 }}
+        transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             {isEdit ? "Edit reminder" : "New reminder"}
@@ -203,7 +216,7 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
             />
             {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
           </div>
-
+          <hr className="border-t border-gray-100 dark:border-gray-700" />
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Scheduled time</label>
             <DateTimePicker value={scheduledTime} onChange={setScheduledTime} accent="amber" />
@@ -258,7 +271,7 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
               </div>
             )}
           </div>
-
+          <hr className="border-t border-gray-100 dark:border-gray-700" />
           {(!isEdit || isSeries) && (
             <div>
               <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -437,7 +450,7 @@ export function ReminderModal({ reminder, categories, onClose, onSave, onDelete,
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

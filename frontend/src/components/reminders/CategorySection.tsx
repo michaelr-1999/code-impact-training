@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import { Bell } from "lucide-react";
 import type { ApiReminder } from "../../api/reminders";
 import { ReminderItem } from "./ReminderItem";
 
@@ -44,11 +46,16 @@ export function CategorySection({ name, reminders, onToggle, onEdit, variant }: 
       {expanded && (
         <div className="px-4 pb-3 border-t border-gray-100 dark:border-gray-700">
           {sorted.length === 0 ? (
-            <p className="text-sm text-gray-400 dark:text-gray-500 py-2">No reminders</p>
+            <div className="flex flex-col items-center justify-center py-5 text-center">
+              <Bell size={16} className="text-gray-300 dark:text-gray-600 mb-1.5" strokeWidth={1.5} />
+              <p className="text-xs text-gray-400 dark:text-gray-500">No reminders</p>
+            </div>
           ) : (
-            sorted.map((r) => (
-              <ReminderItem key={r.id} reminder={r} onToggle={onToggle} onEdit={onEdit} />
-            ))
+            <AnimatePresence initial={false}>
+              {sorted.map((r) => (
+                <ReminderItem key={r.id} reminder={r} onToggle={onToggle} onEdit={onEdit} />
+              ))}
+            </AnimatePresence>
           )}
         </div>
       )}

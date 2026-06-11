@@ -1,4 +1,5 @@
 import { useState, useEffect, type FormEvent } from "react";
+import { motion } from "framer-motion";
 import { createTask, updateTask, deleteTask, deleteTaskSeries, type ApiTask } from "../../api/tasks";
 import { DateTimePicker } from "../DateTimePicker";
 
@@ -147,9 +148,21 @@ export function TaskModal({ task, onClose, onSave, onDelete, onDeleteSeries }: P
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
+    >
       <div className="absolute inset-0 bg-black/40" />
-      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <motion.div
+        className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+        initial={{ scale: 0.95, y: 16 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.95, y: 16 }}
+        transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{isEdit ? "Edit task" : "New task"}</h2>
           <button
@@ -185,10 +198,12 @@ export function TaskModal({ task, onClose, onSave, onDelete, onDeleteSeries }: P
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
+          <hr className="border-t border-gray-100 dark:border-gray-700" />
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due date &amp; time</label>
             <DateTimePicker value={dueDate} onChange={setDueDate} accent="green" />
           </div>
+          <hr className="border-t border-gray-100 dark:border-gray-700" />
           <div>
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
@@ -322,7 +337,7 @@ export function TaskModal({ task, onClose, onSave, onDelete, onDeleteSeries }: P
             </div>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

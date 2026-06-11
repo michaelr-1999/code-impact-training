@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Bell } from "lucide-react";
 import type { DashboardReminder } from "../../api/dashboard";
 
 interface Props {
@@ -24,7 +25,11 @@ export function RemindersWidget({ reminders }: Props) {
         </button>
       </div>
       {reminders.length === 0 ? (
-        <p className="text-sm text-gray-400 dark:text-gray-500">No reminders today</p>
+        <div className="flex flex-col items-center justify-center py-4 text-center">
+          <Bell size={20} className="text-gray-300 dark:text-gray-600 mb-1.5" strokeWidth={1.5} />
+          <p className="text-xs font-medium text-gray-400 dark:text-gray-500">Nothing scheduled</p>
+          <p className="text-xs text-gray-300 dark:text-gray-600 mt-0.5">No reminders today</p>
+        </div>
       ) : (
         <ul className="space-y-2">
           {reminders.map((reminder) => (

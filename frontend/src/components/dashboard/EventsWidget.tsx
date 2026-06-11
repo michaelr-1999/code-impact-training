@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { CalendarDays } from "lucide-react";
 import type { DashboardEvent } from "../../api/dashboard";
 
 interface Props {
@@ -31,7 +32,11 @@ export function EventsWidget({ events }: Props) {
         </button>
       </div>
       {events.length === 0 ? (
-        <p className="text-sm text-gray-400 dark:text-gray-500">No events today</p>
+        <div className="flex flex-col items-center justify-center py-4 text-center">
+          <CalendarDays size={20} className="text-gray-300 dark:text-gray-600 mb-1.5" strokeWidth={1.5} />
+          <p className="text-xs font-medium text-gray-400 dark:text-gray-500">Open schedule</p>
+          <p className="text-xs text-gray-300 dark:text-gray-600 mt-0.5">No events today</p>
+        </div>
       ) : (
         <ul className="space-y-2">
           {events.map((event) => (

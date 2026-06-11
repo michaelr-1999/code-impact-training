@@ -2,6 +2,7 @@ import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { ToastProvider } from "./context/ToastContext";
 import PrivateRoute from "./components/PrivateRoute";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -28,6 +29,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <ThemeProvider>
+    <ToastProvider>
     <BrowserRouter>
       <AuthProvider>
         <Routes>
@@ -64,6 +66,7 @@ function App() {
         </Routes>
       </AuthProvider>
     </BrowserRouter>
+    </ToastProvider>
     </ThemeProvider>
   );
 }
