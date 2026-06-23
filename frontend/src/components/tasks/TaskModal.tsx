@@ -230,6 +230,8 @@ export function TaskModal({ task, onClose, onSave, onDelete, onDeleteSeries }: P
                     max={365}
                     value={repeatCount}
                     onChange={(e) => setRepeatCount(Math.max(1, parseInt(e.target.value) || 1))}
+                    onFocus={(e) => e.target.select()}
+                    onClick={(e) => (e.target as HTMLInputElement).select()}
                     className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
                   />
                 </div>
@@ -262,6 +264,8 @@ export function TaskModal({ task, onClose, onSave, onDelete, onDeleteSeries }: P
                       min={1}
                       value={repeatInterval}
                       onChange={(e) => setRepeatInterval(Math.max(1, parseInt(e.target.value) || 1))}
+                      onFocus={(e) => e.target.select()}
+                      onClick={(e) => (e.target as HTMLInputElement).select()}
                       className="w-20 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center"
                     />
                     <select
