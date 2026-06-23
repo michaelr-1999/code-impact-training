@@ -636,7 +636,7 @@ function EventDetailModal({ event, onClose, onSave, onDelete, onDeleteSeries, on
 
 // ── Month view ────────────────────────────────────────────────────────────────
 
-function MonthView({ viewDate, today, events, tasks, reminders, onDayClick, onEventClick, onTaskClick, onReminderClick }: { viewDate: Date; today: Date; events: CalendarEvent[]; tasks: ApiTask[]; reminders: ApiReminder[]; onDayClick: (date: Date) => void; onEventClick: (event: CalendarEvent) => void; onTaskClick: (task: ApiTask) => void; onReminderClick: (reminder: ApiReminder) => void }) {
+function MonthView({ viewDate, today, events, tasks, reminders, onDayClick }: { viewDate: Date; today: Date; events: CalendarEvent[]; tasks: ApiTask[]; reminders: ApiReminder[]; onDayClick: (date: Date) => void }) {
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
 
@@ -699,38 +699,25 @@ function MonthView({ viewDate, today, events, tasks, reminders, onDayClick, onEv
               >
                 {cell.day}
               </span>
-              <div className="mt-0.5 space-y-0.5 hidden sm:block">
-                {cellEvents.slice(0, 2).map((e) => (
-                  <div
-                    key={e.id}
-                    onClick={(ev) => { ev.stopPropagation(); onEventClick(e); }}
-                    className={`truncate text-xs px-1 py-0.5 rounded cursor-pointer ${calendarColors.event.pill}`}
-                  >
-                    {e.title}
-                  </div>
-                ))}
-                {cellTasks.slice(0, Math.max(0, 2 - cellEvents.length)).map((t) => (
-                  <div
-                    key={t.id}
-                    onClick={(ev) => { ev.stopPropagation(); onTaskClick(t); }}
-                    className={`truncate text-xs px-1 py-0.5 rounded cursor-pointer ${calendarColors.task.pill}`}
-                  >
-                    {t.title}
-                  </div>
-                ))}
-                {cellReminders.slice(0, Math.max(0, 2 - cellEvents.length - cellTasks.length)).map((r) => (
-                  <div
-                    key={r.id}
-                    onClick={(ev) => { ev.stopPropagation(); onReminderClick(r); }}
-                    className={`truncate text-xs px-1 py-0.5 rounded cursor-pointer ${calendarColors.reminder.pill}`}
-                  >
-                    {r.title}
-                  </div>
-                ))}
-                {totalItems > 2 && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 px-1">+{totalItems - 2} more</div>
-                )}
-              </div>
+              {totalItems > 0 && (
+                <div className="mt-1 hidden sm:flex flex-wrap gap-1">
+                  {cellEvents.length > 0 && (
+                    <span className="text-xs font-semibold bg-blue-50 text-blue-700 dark:bg-blue-700 dark:text-blue-50 rounded px-1 py-0.5">
+                      E{cellEvents.length}
+                    </span>
+                  )}
+                  {cellTasks.length > 0 && (
+                    <span className="text-xs font-semibold bg-green-50 text-green-700 dark:bg-green-700 dark:text-green-50 rounded px-1 py-0.5">
+                      T{cellTasks.length}
+                    </span>
+                  )}
+                  {cellReminders.length > 0 && (
+                    <span className="text-xs font-semibold bg-amber-50 text-amber-700 dark:bg-amber-700 dark:text-amber-50 rounded px-1 py-0.5">
+                      R{cellReminders.length}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
@@ -1292,7 +1279,7 @@ export default function CalendarPage() {
           </button>
         </div>
 
-        {view === "month" && <MonthView viewDate={viewDate} today={today} events={events} tasks={tasks} reminders={reminders} onDayClick={(date) => { setViewDate(date); setView("day"); }} onEventClick={setSelectedEvent} onTaskClick={(task) => navigate(`/tasks?edit=${task.id}`)} onReminderClick={(reminder) => navigate(`/reminders?edit=${reminder.id}`)} />}
+        {view === "month" && <MonthView viewDate={viewDate} today={today} events={events} tasks={tasks} reminders={reminders} onDayClick={(date) => { setViewDate(date); setView("day"); }} />}
         {view === "week" && <WeekView viewDate={viewDate} today={today} events={events} tasks={tasks} reminders={reminders} onEventClick={setSelectedEvent} onTaskClick={(task) => navigate(`/tasks?edit=${task.id}`)} onReminderClick={(reminder) => navigate(`/reminders?edit=${reminder.id}`)} />}
         {view === "day" && <DayView viewDate={viewDate} today={today} events={events} tasks={tasks} reminders={reminders} onEventClick={setSelectedEvent} onTaskClick={(task) => navigate(`/tasks?edit=${task.id}`)} onReminderClick={(reminder) => navigate(`/reminders?edit=${reminder.id}`)} />}
       </div>
