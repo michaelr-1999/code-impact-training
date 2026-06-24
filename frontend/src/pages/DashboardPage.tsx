@@ -51,9 +51,9 @@ function StatCard({ label, count, icon: Icon, gradient, countColor }: StatCardPr
       <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center shrink-0`}>
         <Icon size={17} className="text-white" strokeWidth={2} />
       </div>
-      <div>
+      <div className="min-w-0 overflow-hidden">
         <p className={`text-2xl font-bold leading-none ${countColor}`}>{animated}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{label}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{label}</p>
       </div>
     </div>
   );
