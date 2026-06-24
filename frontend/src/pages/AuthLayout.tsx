@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import loginBg from "../assets/newlogin.jpg";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -7,8 +8,9 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children, toggle }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 w-full max-w-sm">
+    <div className="relative min-h-screen flex items-center justify-center">
+      <img src={loginBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+      <div className="relative bg-white rounded-2xl shadow-sm border border-gray-200 p-8 w-full max-w-sm">
         <p className="text-2xl font-bold text-gray-900 mb-6">Orbit</p>
         {children}
         <p className="mt-6 text-center text-sm text-gray-500">
