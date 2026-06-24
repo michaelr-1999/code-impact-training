@@ -39,7 +39,7 @@ export function OverdueWidget({ tasks, reminders }: Props) {
             onClick={() => navigate("/tasks")}
             className="flex items-start gap-3 cursor-pointer rounded-lg px-2 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
-            <span className="shrink-0 text-xs font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950 px-1.5 py-0.5 rounded mt-0.5">
+            <span className="shrink-0 w-16 text-center text-xs font-medium text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950 px-1.5 py-0.5 rounded mt-0.5">
               Task
             </span>
             <div className="flex-1 min-w-0">
@@ -56,7 +56,7 @@ export function OverdueWidget({ tasks, reminders }: Props) {
             onClick={() => navigate("/reminders")}
             className="flex items-start gap-3 cursor-pointer rounded-lg px-2 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
-            <span className="shrink-0 text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 px-1.5 py-0.5 rounded mt-0.5">
+            <span className="shrink-0 w-16 text-center text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 px-1.5 py-0.5 rounded mt-0.5">
               Reminder
             </span>
             <div className="flex-1 min-w-0">
