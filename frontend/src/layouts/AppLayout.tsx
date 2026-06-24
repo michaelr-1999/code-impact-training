@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
+import lightmodeBg from "../assets/lightmode.jpeg";
+import darkmodeBg from "../assets/darkmode.jpg";
 import { LayoutDashboard, CalendarDays, ListTodo, Bell, User } from "lucide-react";
 import { useNotifications } from "../hooks/useNotifications";
 import { useBadgeCounts } from "../hooks/useBadgeCounts";
@@ -62,6 +65,8 @@ function Sidebar({ onClose, badges }: { onClose?: () => void; badges: { tasks: n
 export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const { isDark } = useTheme();
+  const isDashboard = location.pathname === "/dashboard";
   useNotifications(true);
   const badges = useBadgeCounts();
 
@@ -109,8 +114,15 @@ export default function AppLayout() {
           </div>
         </header>
 
-        <main className="flex-1 bg-gray-50 dark:bg-black">
-          <div key={location.pathname} className="page-fade-in">
+        <main className={`relative flex-1 ${!isDashboard ? "bg-gradient-to-br from-gray-50 via-blue-50/40 to-slate-100 dark:from-gray-950 dark:via-slate-900 dark:to-gray-900" : ""}`}>
+          {isDashboard && (
+            <img
+              src={isDark ? darkmodeBg : lightmodeBg}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+          <div key={location.pathname} className="page-fade-in relative">
             <Outlet />
           </div>
         </main>
