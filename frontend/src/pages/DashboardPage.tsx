@@ -47,13 +47,13 @@ interface StatCardProps {
 function StatCard({ label, count, icon: Icon, gradient, countColor }: StatCardProps) {
   const animated = useCountUp(count);
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 flex items-center gap-3">
-      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center shrink-0`}>
-        <Icon size={17} className="text-white" strokeWidth={2} />
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-3 flex flex-col gap-2">
+      <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center shrink-0`}>
+        <Icon size={16} className="text-white" strokeWidth={2} />
       </div>
-      <div className="min-w-0 overflow-hidden">
+      <div>
         <p className={`text-2xl font-bold leading-none ${countColor}`}>{animated}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{label}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-tight">{label}</p>
       </div>
     </div>
   );
@@ -63,11 +63,11 @@ function StatsRowSkeleton() {
   return (
     <div className="grid grid-cols-3 gap-4 mb-4 animate-pulse">
       {[0, 1, 2].map(i => (
-        <div key={i} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-800 shrink-0" />
-          <div className="flex-1">
+        <div key={i} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-3 flex flex-col gap-2">
+          <div className="w-9 h-9 rounded-xl bg-gray-200 dark:bg-gray-800 shrink-0" />
+          <div>
             <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-6 mb-1.5" />
-            <div className="h-2.5 bg-gray-200 dark:bg-gray-800 rounded w-20" />
+            <div className="h-2.5 bg-gray-200 dark:bg-gray-800 rounded w-full" />
           </div>
         </div>
       ))}
